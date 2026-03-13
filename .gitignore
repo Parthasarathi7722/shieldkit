@@ -1,0 +1,34 @@
+# Environment
+.env
+.env.backup.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# DuckDB
+data/
+*.duckdb
+*.duckdb.wal
+
+# Tools output
+scoutsuite-results/
+output/
+reports/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/

@@ -1,0 +1,256 @@
+{
+  "tools": {
+
+    "__comment_sbom": "=== SBOM Generation ===",
+    "syft": {
+      "name": "Syft",
+      "category": "sbom",
+      "description": "Generate Software Bill of Materials (SBOM) from container images, filesystems, and archives. Outputs CycloneDX, SPDX, and more.",
+      "install_methods": [
+        {"id": "default",      "label": "Auto-install",  "icon": "📦", "cmd": "curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin"},
+        {"id": "native_macos", "label": "macOS (brew)",  "icon": "🍎", "cmd": "brew install syft"},
+        {"id": "native_linux", "label": "Linux (script)","icon": "🐧", "cmd": "curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull anchore/syft:latest"}
+      ],
+      "formats": ["cyclonedx-json", "spdx-json", "syft-json", "table"],
+      "targets": ["image", "dir", "file", "registry"],
+      "required_env": [],
+      "optional_env": ["SYFT_BIN", "SYFT_OUTPUT_FORMAT"],
+      "docs": "https://github.com/anchore/syft",
+      "config_fields": [
+        {"key": "SYFT_BIN",           "label": "Binary Path",           "type": "text",     "default": "syft",           "required": false, "help": "Custom path to syft binary (leave blank to use PATH)"},
+        {"key": "SYFT_OUTPUT_FORMAT", "label": "Default Output Format", "type": "select",   "default": "cyclonedx-json", "required": false, "help": "Default SBOM output format",
+          "options": ["cyclonedx-json", "spdx-json", "syft-json", "table"]},
+        {"key": "SYFT_SCOPE",         "label": "Scan Scope",            "type": "select",   "default": "squashed",       "required": false, "help": "squashed = final image layer; all-layers = every layer",
+          "options": ["squashed", "all-layers"]},
+        {"key": "SYFT_ANCHORE_HOST",  "label": "Anchore Enterprise URL","type": "text",     "default": "",               "required": false, "help": "Upload SBOMs to an Anchore Enterprise instance (optional)"},
+        {"key": "SYFT_ANCHORE_PATH",  "label": "Anchore Upload Path",   "type": "text",     "default": "/v1/enterprise/sboms", "required": false, "help": "API path for Anchore SBOM uploads"}
+      ]
+    },
+
+    "__comment_sca": "=== SCA / Dependency Scanning ===",
+    "grype": {
+      "name": "Grype",
+      "category": "sca",
+      "description": "Vulnerability scanner for container images and filesystems. Uses Anchore's vulnerability database and accepts SBOM input.",
+      "install_methods": [
+        {"id": "default",      "label": "Auto-install",  "icon": "📦", "cmd": "curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin"},
+        {"id": "native_macos", "label": "macOS (brew)",  "icon": "🍎", "cmd": "brew install grype"},
+        {"id": "native_linux", "label": "Linux (script)","icon": "🐧", "cmd": "curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull anchore/grype:latest"}
+      ],
+      "severity_levels": ["critical", "high", "medium", "low", "negligible"],
+      "targets": ["image", "dir", "sbom", "file"],
+      "required_env": [],
+      "optional_env": ["GRYPE_BIN", "GRYPE_DB_AUTO_UPDATE", "GRYPE_FAIL_ON_SEVERITY"],
+      "docs": "https://github.com/anchore/grype",
+      "config_fields": [
+        {"key": "GRYPE_BIN",              "label": "Binary Path",         "type": "text",   "default": "grype",    "required": false, "help": "Custom path to grype binary"},
+        {"key": "GRYPE_DB_AUTO_UPDATE",   "label": "Auto-update DB",      "type": "toggle", "default": "true",     "required": false, "help": "Automatically update the vulnerability database on each run"},
+        {"key": "GRYPE_FAIL_ON_SEVERITY", "label": "Fail on Severity",    "type": "select", "default": "",         "required": false, "help": "Exit non-zero when vulnerabilities at this level (or above) are found",
+          "options": ["", "negligible", "low", "medium", "high", "critical"]},
+        {"key": "GRYPE_ONLY_FIXED",       "label": "Only Fixed Vulns",    "type": "toggle", "default": "false",    "required": false, "help": "Only report vulnerabilities that have a fix available"},
+        {"key": "GRYPE_ADD_CPES_IF_NONE", "label": "Generate CPEs",       "type": "toggle", "default": "true",     "required": false, "help": "Generate CPEs for packages that don't have them (improves match rate)"},
+        {"key": "GRYPE_DB_UPDATE_URL",    "label": "DB Update URL",       "type": "text",   "default": "",         "required": false, "help": "Custom vulnerability DB feed URL (for air-gapped environments)"}
+      ]
+    },
+
+    "__comment_container": "=== Container & Image Scanning ===",
+    "trivy": {
+      "name": "Trivy",
+      "category": "container",
+      "description": "Comprehensive vulnerability scanner for container images, filesystems, git repos, Kubernetes clusters, and cloud resources.",
+      "install_methods": [
+        {"id": "default",      "label": "Auto-install",  "icon": "📦", "cmd": "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin"},
+        {"id": "native_macos", "label": "macOS (brew)",  "icon": "🍎", "cmd": "brew install trivy"},
+        {"id": "native_linux", "label": "Linux (apt)",   "icon": "🐧", "cmd": "sudo apt-get install -y wget apt-transport-https gnupg lsb-release && wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add - && echo \"deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main\" | sudo tee /etc/apt/sources.list.d/trivy.list && sudo apt-get update && sudo apt-get install -y trivy"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull aquasec/trivy:latest"}
+      ],
+      "scan_types": ["image", "fs", "repo", "config", "sbom", "kubernetes"],
+      "severity_levels": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"],
+      "required_env": [],
+      "optional_env": ["TRIVY_BIN", "TRIVY_SEVERITY", "TRIVY_CACHE_DIR", "TRIVY_DB_REPOSITORY"],
+      "docs": "https://github.com/aquasecurity/trivy",
+      "config_fields": [
+        {"key": "TRIVY_BIN",             "label": "Binary Path",         "type": "text",   "default": "trivy",                         "required": false, "help": "Custom path to trivy binary"},
+        {"key": "TRIVY_SEVERITY",        "label": "Severity Filter",     "type": "select", "default": "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN","required": false, "help": "Only report vulnerabilities at these severity levels",
+          "options": ["CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN", "CRITICAL,HIGH,MEDIUM", "CRITICAL,HIGH", "CRITICAL"]},
+        {"key": "TRIVY_CACHE_DIR",       "label": "Cache Directory",     "type": "text",   "default": "",                              "required": false, "help": "Directory for Trivy's vulnerability DB cache (leave blank for default)"},
+        {"key": "TRIVY_SKIP_DB_UPDATE",  "label": "Skip DB Update",      "type": "toggle", "default": "false",                         "required": false, "help": "Skip database update on each run (use cached DB)"},
+        {"key": "TRIVY_OFFLINE_SCAN",    "label": "Offline Scan",        "type": "toggle", "default": "false",                         "required": false, "help": "Disable all network access (requires pre-downloaded DB)"},
+        {"key": "TRIVY_DB_REPOSITORY",   "label": "DB Repository",       "type": "text",   "default": "",                              "required": false, "help": "Custom vulnerability DB OCI repository (air-gapped environments)"},
+        {"key": "TRIVY_IGNORE_UNFIXED",  "label": "Ignore Unfixed",      "type": "toggle", "default": "false",                         "required": false, "help": "Do not report vulnerabilities with no available fix"}
+      ]
+    },
+
+    "__comment_url": "=== URL & Endpoint Scanning ===",
+    "nuclei": {
+      "name": "Nuclei",
+      "category": "url",
+      "description": "Fast, template-based vulnerability scanner for URLs and APIs. 9000+ community templates covering CVEs, misconfigurations, and exposures.",
+      "install_methods": [
+        {"id": "default",      "label": "go install",    "icon": "📦", "cmd": "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"},
+        {"id": "native_macos", "label": "macOS (brew)",  "icon": "🍎", "cmd": "brew install nuclei"},
+        {"id": "native_linux", "label": "Linux (snap)",  "icon": "🐧", "cmd": "sudo snap install nuclei"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull projectdiscovery/nuclei:latest"}
+      ],
+      "template_sources": ["community", "custom"],
+      "severity_levels": ["critical", "high", "medium", "low", "info"],
+      "required_env": [],
+      "optional_env": ["NUCLEI_BIN", "NUCLEI_TEMPLATES_DIR", "NUCLEI_RATE_LIMIT"],
+      "docs": "https://github.com/projectdiscovery/nuclei",
+      "config_fields": [
+        {"key": "NUCLEI_BIN",           "label": "Binary Path",             "type": "text",   "default": "nuclei", "required": false, "help": "Custom path to nuclei binary"},
+        {"key": "NUCLEI_TEMPLATES_DIR", "label": "Custom Templates Dir",    "type": "text",   "default": "",       "required": false, "help": "Path to directory with your custom Nuclei templates"},
+        {"key": "NUCLEI_RATE_LIMIT",    "label": "Rate Limit (req/sec)",    "type": "number", "default": "150",    "required": false, "help": "Maximum HTTP requests per second (lower for sensitive targets)"},
+        {"key": "NUCLEI_CONCURRENCY",   "label": "Concurrency",             "type": "number", "default": "25",     "required": false, "help": "Number of concurrent template executions"},
+        {"key": "NUCLEI_TIMEOUT",       "label": "Request Timeout (sec)",   "type": "number", "default": "5",      "required": false, "help": "HTTP request timeout in seconds"},
+        {"key": "NUCLEI_RETRIES",       "label": "Retries",                 "type": "number", "default": "1",      "required": false, "help": "Retry failed requests this many times"},
+        {"key": "GITHUB_TOKEN",         "label": "GitHub Token",            "type": "password","default": "",      "required": false, "help": "GitHub PAT for accessing private template repositories"}
+      ]
+    },
+
+    "__comment_cloud": "=== Cloud Security Posture ===",
+    "prowler": {
+      "name": "Prowler",
+      "category": "cloud",
+      "description": "Cloud security assessment against CIS, SOC2, PCI-DSS, HIPAA, GDPR, and NIST for AWS, Azure, and GCP.",
+      "install_methods": [
+        {"id": "pip",          "label": "pip install",   "icon": "🐍", "cmd": "pip install prowler"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull toniblyx/prowler:latest"},
+        {"id": "native_macos", "label": "macOS (brew)",  "icon": "🍎", "cmd": "brew install prowler"},
+        {"id": "native_linux", "label": "Linux (pip)",   "icon": "🐧", "cmd": "pip3 install prowler"}
+      ],
+      "providers": ["aws", "azure", "gcp"],
+      "compliance_frameworks": ["cis", "soc2", "pci-dss", "hipaa", "gdpr", "nist-800-53"],
+      "required_env": [],
+      "optional_env": ["AWS_PROFILE", "AWS_REGION", "AZURE_SUBSCRIPTION_ID", "GCP_PROJECT_ID"],
+      "docs": "https://github.com/prowler-cloud/prowler",
+      "config_fields": [
+        {"key": "AWS_PROFILE",                  "label": "AWS Profile",               "type": "text",     "default": "",          "required": false, "help": "AWS CLI profile name from ~/.aws/credentials"},
+        {"key": "AWS_REGION",                   "label": "AWS Region",                "type": "text",     "default": "us-east-1", "required": false, "help": "Default AWS region to scan"},
+        {"key": "AWS_ACCESS_KEY_ID",            "label": "AWS Access Key ID",         "type": "text",     "default": "",          "required": false, "help": "AWS access key ID (prefer named profiles over static keys)"},
+        {"key": "AWS_SECRET_ACCESS_KEY",        "label": "AWS Secret Access Key",     "type": "password", "default": "",          "required": false, "help": "AWS secret access key"},
+        {"key": "AWS_SESSION_TOKEN",            "label": "AWS Session Token",         "type": "password", "default": "",          "required": false, "help": "AWS STS session token (for temporary credentials)"},
+        {"key": "AZURE_SUBSCRIPTION_ID",        "label": "Azure Subscription ID",     "type": "text",     "default": "",          "required": false, "help": "Azure subscription to scan"},
+        {"key": "AZURE_TENANT_ID",              "label": "Azure Tenant ID",           "type": "text",     "default": "",          "required": false, "help": "Azure Active Directory tenant ID"},
+        {"key": "AZURE_CLIENT_ID",              "label": "Azure Client ID",           "type": "text",     "default": "",          "required": false, "help": "Azure service principal app ID"},
+        {"key": "AZURE_CLIENT_SECRET",          "label": "Azure Client Secret",       "type": "password", "default": "",          "required": false, "help": "Azure service principal secret"},
+        {"key": "GCP_PROJECT_ID",               "label": "GCP Project ID",            "type": "text",     "default": "",          "required": false, "help": "Google Cloud project to scan"},
+        {"key": "GOOGLE_APPLICATION_CREDENTIALS","label": "GCP Service Account JSON", "type": "text",     "default": "",          "required": false, "help": "Path to GCP service account key JSON file"}
+      ]
+    },
+
+    "scoutsuite": {
+      "name": "ScoutSuite",
+      "category": "cloud",
+      "description": "Multi-cloud security auditing tool for AWS, Azure, GCP, Alibaba, and Oracle. Produces detailed HTML reports.",
+      "install_methods": [
+        {"id": "pip",          "label": "pip install",   "icon": "🐍", "cmd": "pip install scoutsuite"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull rossja/ncc-scoutsuite:latest"},
+        {"id": "native_macos", "label": "macOS (pip3)",  "icon": "🍎", "cmd": "pip3 install scoutsuite"},
+        {"id": "native_linux", "label": "Linux (pip3)",  "icon": "🐧", "cmd": "pip3 install scoutsuite"}
+      ],
+      "providers": ["aws", "azure", "gcp", "aliyun", "oci"],
+      "required_env": [],
+      "optional_env": ["AWS_PROFILE", "AZURE_SUBSCRIPTION_ID", "GCP_PROJECT_ID"],
+      "docs": "https://github.com/nccgroup/ScoutSuite",
+      "config_fields": [
+        {"key": "AWS_PROFILE",                  "label": "AWS Profile",               "type": "text",     "default": "",          "required": false, "help": "AWS CLI profile name"},
+        {"key": "AWS_REGION",                   "label": "AWS Region",                "type": "text",     "default": "us-east-1", "required": false, "help": "Default AWS region"},
+        {"key": "AWS_ACCESS_KEY_ID",            "label": "AWS Access Key ID",         "type": "text",     "default": "",          "required": false, "help": "AWS access key ID"},
+        {"key": "AWS_SECRET_ACCESS_KEY",        "label": "AWS Secret Access Key",     "type": "password", "default": "",          "required": false, "help": "AWS secret access key"},
+        {"key": "AZURE_SUBSCRIPTION_ID",        "label": "Azure Subscription ID",     "type": "text",     "default": "",          "required": false, "help": "Azure subscription to audit"},
+        {"key": "AZURE_TENANT_ID",              "label": "Azure Tenant ID",           "type": "text",     "default": "",          "required": false, "help": "Azure AD tenant ID"},
+        {"key": "GCP_PROJECT_ID",               "label": "GCP Project ID",            "type": "text",     "default": "",          "required": false, "help": "Google Cloud project to audit"},
+        {"key": "GOOGLE_APPLICATION_CREDENTIALS","label": "GCP Service Account JSON", "type": "text",     "default": "",          "required": false, "help": "Path to GCP service account key JSON file"},
+        {"key": "SCOUTSUITE_REPORT_DIR",        "label": "Report Output Directory",   "type": "text",     "default": "./scoutsuite-report", "required": false, "help": "Directory to write HTML audit reports"}
+      ]
+    },
+
+    "__comment_iac": "=== Infrastructure as Code ===",
+    "checkov": {
+      "name": "Checkov",
+      "category": "iac",
+      "description": "Static analysis for IaC — Terraform, CloudFormation, Kubernetes, Dockerfiles, Helm, ARM, and more.",
+      "install_methods": [
+        {"id": "pip",          "label": "pip install",   "icon": "🐍", "cmd": "pip install checkov"},
+        {"id": "native_macos", "label": "macOS (brew)",  "icon": "🍎", "cmd": "brew install checkov"},
+        {"id": "native_linux", "label": "Linux (pip3)",  "icon": "🐧", "cmd": "pip3 install checkov"},
+        {"id": "docker",       "label": "Docker",        "icon": "🐳", "cmd": "docker pull bridgecrew/checkov:latest"}
+      ],
+      "frameworks": ["terraform", "cloudformation", "kubernetes", "dockerfile", "helm", "arm", "bicep", "ansible"],
+      "required_env": [],
+      "optional_env": ["CHECKOV_API_KEY", "CHECKOV_SKIP_CHECK"],
+      "docs": "https://github.com/bridgecrewio/checkov",
+      "config_fields": [
+        {"key": "CHECKOV_API_KEY",    "label": "Bridgecrew API Key",           "type": "password", "default": "",       "required": false, "help": "Enables Bridgecrew cloud policies, reporting, and platform integration"},
+        {"key": "CHECKOV_SKIP_CHECK", "label": "Skip Checks (comma-separated)","type": "text",     "default": "",       "required": false, "help": "Checks to skip, e.g. CKV_AWS_18,CKV_AWS_20"},
+        {"key": "CHECKOV_CHECK",      "label": "Run Only (comma-separated)",   "type": "text",     "default": "",       "required": false, "help": "Run only these specific checks (leave empty to run all)"},
+        {"key": "CHECKOV_SOFT_FAIL",  "label": "Soft Fail Mode",               "type": "toggle",   "default": "false",  "required": false, "help": "Always exit 0 — useful for CI pipelines that should not block on findings"},
+        {"key": "CHECKOV_COMPACT",    "label": "Compact Output",               "type": "toggle",   "default": "false",  "required": false, "help": "Suppress passing checks in output"},
+        {"key": "CHECKOV_QUIET",      "label": "Quiet Mode",                   "type": "toggle",   "default": "false",  "required": false, "help": "Only display failing checks"}
+      ]
+    },
+
+    "__comment_dast": "=== Dynamic Application Security Testing ===",
+    "zap": {
+      "name": "OWASP ZAP",
+      "category": "dast",
+      "description": "Industry-leading open-source DAST scanner. Finds XSS, SQL injection, CSRF, missing headers, and hundreds of other vulnerabilities in live web applications and APIs.",
+      "install_methods": [
+        {"id": "docker",       "label": "Docker (recommended)", "icon": "🐳", "cmd": "docker pull ghcr.io/zaproxy/zaproxy:stable"},
+        {"id": "native_macos", "label": "macOS (brew cask)",    "icon": "🍎", "cmd": "brew install --cask owasp-zap"},
+        {"id": "native_linux", "label": "Linux (snap)",         "icon": "🐧", "cmd": "sudo snap install zaproxy --classic"},
+        {"id": "pip",          "label": "Python client only",   "icon": "🐍", "cmd": "pip install zaproxy"}
+      ],
+      "scan_modes": ["baseline", "full", "api"],
+      "auth_methods": ["none", "basic", "form", "bearer", "script"],
+      "attack_strengths": ["low", "medium", "high", "insane"],
+      "alert_thresholds": ["low", "medium", "high"],
+      "api_formats": ["openapi", "graphql", "soap"],
+      "required_env": [],
+      "optional_env": ["ZAP_HOST", "ZAP_PORT", "ZAP_API_KEY", "ZAP_USE_DOCKER"],
+      "docs": "https://www.zaproxy.org/",
+      "config_fields": [
+        {"key": "ZAP_USE_DOCKER", "label": "Use Docker (recommended)", "type": "toggle",   "default": "true",      "required": false, "help": "Run ZAP via Docker image. Easiest setup, no native install needed."},
+        {"key": "ZAP_HOST",       "label": "ZAP Daemon Host",          "type": "text",     "default": "localhost",  "required": false, "help": "Hostname of a running ZAP daemon (API mode only — ignored in Docker mode)"},
+        {"key": "ZAP_PORT",       "label": "ZAP Daemon Port",          "type": "number",   "default": "8080",       "required": false, "help": "Port for the ZAP REST API (API mode only)"},
+        {"key": "ZAP_API_KEY",    "label": "ZAP API Key",              "type": "password", "default": "",           "required": false, "help": "API key set in ZAP Tools > Options > API (API mode only)"}
+      ]
+    }
+  },
+
+  "tiers": {
+    "starter": {
+      "name": "Starter",
+      "tools": ["syft", "grype", "trivy"],
+      "description": "SBOM generation + vulnerability scanning. Zero cost, zero cloud credentials needed."
+    },
+    "scanner": {
+      "name": "Full Scanner",
+      "tools": ["syft", "grype", "trivy", "nuclei", "checkov"],
+      "description": "Starter + URL endpoint scanning + IaC misconfiguration checks."
+    },
+    "cloud": {
+      "name": "Cloud Security",
+      "tools": ["syft", "grype", "trivy", "nuclei", "checkov", "prowler", "scoutsuite"],
+      "description": "Full Scanner + multi-cloud posture assessment. Requires cloud provider credentials."
+    },
+    "dast": {
+      "name": "DAST Bundle",
+      "tools": ["syft", "grype", "trivy", "nuclei", "checkov", "zap"],
+      "description": "Full Scanner + OWASP ZAP dynamic testing for web applications and APIs."
+    },
+    "full": {
+      "name": "Everything",
+      "tools": ["syft", "grype", "trivy", "nuclei", "checkov", "prowler", "scoutsuite", "zap"],
+      "description": "Complete security suite — all tools. Requires cloud credentials and Docker or native ZAP."
+    },
+    "custom": {
+      "name": "Custom",
+      "tools": [],
+      "description": "Pick exactly the tools you need."
+    }
+  }
+}

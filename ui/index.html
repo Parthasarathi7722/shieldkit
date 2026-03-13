@@ -1,0 +1,3716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShieldKit - Security Scanning & Cloud Posture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e17;
+            color: #e5e7eb;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 240px;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 24px 32px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo::before {
+            content: "🛡️";
+            font-size: 24px;
+        }
+
+        .nav-section {
+            padding: 0 12px 16px;
+        }
+
+        .nav-section-title {
+            padding: 12px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6b7280;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            padding: 12px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item:hover {
+            background: #1f2937;
+            color: #10b981;
+        }
+
+        .nav-item.active {
+            background: #10b981;
+            color: #0a0e17;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #111827;
+            border-bottom: 1px solid #1f2937;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f3f4f6;
+        }
+
+        .stat-card.critical .stat-value {
+            color: #dc2626;
+        }
+
+        .stat-card.high .stat-value {
+            color: #ea580c;
+        }
+
+        .stat-card.medium .stat-value {
+            color: #eab308;
+        }
+
+        .stat-card.low .stat-value {
+            color: #22c55e;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: #0a0e17;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: #1f2937;
+            color: #e5e7eb;
+            border: 1px solid #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #374151;
+            border-color: #10b981;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #d1d5db;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #e5e7eb;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-textarea {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: #1f2937;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #d1d5db;
+            border-bottom: 1px solid #374151;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        tbody tr:hover {
+            background: #111827;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #0f1419;
+        }
+
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .severity-critical {
+            background: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+        }
+
+        .severity-high {
+            background: rgba(234, 88, 12, 0.2);
+            color: #fed7aa;
+        }
+
+        .severity-medium {
+            background: rgba(234, 179, 8, 0.2);
+            color: #fef08a;
+        }
+
+        .severity-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #bbf7d0;
+        }
+
+        .severity-info {
+            background: rgba(107, 114, 128, 0.2);
+            color: #d1d5db;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #f3f4f6;
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-left: 4px solid #10b981;
+            border-radius: 6px;
+            padding: 16px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.error {
+            border-left-color: #dc2626;
+        }
+
+        .toast.warning {
+            border-left-color: #eab308;
+        }
+
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Expandable */
+        .expandable {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #374151;
+        }
+
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #10b981;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .expand-btn::before {
+            content: "▶";
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .expand-btn.expanded::before {
+            transform: rotate(90deg);
+        }
+
+        .expand-content {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: #0f1419;
+            border-radius: 4px;
+            border-left: 2px solid #10b981;
+        }
+
+        .expand-content.visible {
+            display: block;
+        }
+
+        /* Scan Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #bbf7d0;
+        }
+
+        .status-pending {
+            background: rgba(59, 130, 246, 0.2);
+            color: #bfdbfe;
+        }
+
+        .status-failed {
+            background: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #374151;
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Two-column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .sidebar-stats {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .sidebar-stats-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-stat {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .sidebar-stat:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .sidebar-stat-label {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f3f4f6;
+        }
+
+        /* Mini Bar Chart */
+        .mini-bar {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .mini-bar-segment {
+            flex: 1;
+            height: 8px;
+            border-radius: 2px;
+            background: #1f2937;
+        }
+
+        .mini-bar-segment.critical {
+            background: #dc2626;
+        }
+
+        .mini-bar-segment.high {
+            background: #ea580c;
+        }
+
+        .mini-bar-segment.medium {
+            background: #eab308;
+        }
+
+        .mini-bar-segment.low {
+            background: #22c55e;
+        }
+
+        /* Tool Grid */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .tool-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .tool-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .tool-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .tool-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+
+        .tool-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tool-badge.installed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #bbf7d0;
+        }
+
+        .tool-badge.not-installed {
+            background: rgba(107, 114, 128, 0.2);
+            color: #d1d5db;
+        }
+
+        .tool-description {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .tool-version {
+            font-size: 11px;
+            color: #6b7280;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Scan Type Selector */
+        .scan-type-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .scan-type-btn {
+            padding: 10px 16px;
+            border: 1px solid #374151;
+            background: transparent;
+            border-radius: 6px;
+            color: #d1d5db;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .scan-type-btn:hover {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .scan-type-btn.active {
+            background: #10b981;
+            border-color: #10b981;
+            color: #0a0e17;
+        }
+
+        /* Provider Selector */
+        .provider-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .provider-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #374151;
+            background: transparent;
+            border-radius: 6px;
+            color: #d1d5db;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .provider-btn:hover {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .provider-btn.active {
+            background: #10b981;
+            border-color: #10b981;
+            color: #0a0e17;
+        }
+
+        /* Multi-select Checkboxes */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* Tool card selected state */
+        .tool-card.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .tool-select-cb {
+            position: absolute;
+            top: 14px; right: 14px;
+            width: 18px; height: 18px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .tool-card { position: relative; }
+
+        /* Batch install row */
+        .batch-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: start;
+            padding: 14px;
+            background: #0f1419;
+            border: 1px solid #1f2937;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .batch-row-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .batch-status-pending  { background: rgba(107,114,128,0.2); color:#d1d5db; }
+        .batch-status-running  { background: rgba(59,130,246,0.2);  color:#93c5fd; }
+        .batch-status-done     { background: rgba(34,197,94,0.2);   color:#bbf7d0; }
+        .batch-status-failed   { background: rgba(220,38,38,0.2);   color:#fca5a5; }
+
+        /* Tier button active */
+        .tier-btn.tier-active {
+            background: rgba(16,185,129,0.15);
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        /* Tool Card Actions */
+        .tool-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #1f2937;
+        }
+
+        .tool-category-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            margin-bottom: 8px;
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 42px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #374151;
+            border-radius: 22px;
+            transition: .2s;
+        }
+
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background: #9ca3af;
+            border-radius: 50%;
+            transition: .2s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: rgba(16, 185, 129, 0.3);
+            border: 1px solid #10b981;
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+            background: #10b981;
+        }
+
+        /* Section toggle tabs (within a card) */
+        .inner-tab-bar {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .inner-tab {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #9ca3af;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+
+        .inner-tab:hover { color: #d1d5db; }
+
+        .inner-tab.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+        }
+
+        /* Install progress */
+        .install-log {
+            background: #0f1419;
+            border: 1px solid #1f2937;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #9ca3af;
+            max-height: 160px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Severity colors for DAST risk levels */
+        .zap-risk-high   { color: #fed7aa; background: rgba(234, 88, 12, 0.2); }
+        .zap-risk-medium { color: #fef08a; background: rgba(234, 179, 8, 0.2); }
+        .zap-risk-low    { color: #bbf7d0; background: rgba(34, 197, 94, 0.2); }
+        .zap-risk-info   { color: #d1d5db; background: rgba(107, 114, 128, 0.2); }
+
+        /* Field help text */
+        .field-help {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+                padding: 16px 0;
+            }
+
+            .logo::before {
+                font-size: 20px;
+            }
+
+            .content-area {
+                padding: 16px;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 12px 16px;
+            }
+
+            .header-title {
+                font-size: 16px;
+            }
+
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scan-type-selector {
+                gap: 6px;
+            }
+
+            .scan-type-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">ShieldKit</div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
+                <div class="nav-item" data-tab="scanner">🔍 Scanner</div>
+                <div class="nav-item" data-tab="cloud">☁️ Cloud Security</div>
+                <div class="nav-item" data-tab="logs">📋 Log Explorer</div>
+                <div class="nav-item" data-tab="tools">🛠️ Tools &amp; Config</div>
+            </div>
+
+            <div class="nav-section" style="margin-top: auto; padding-top: 24px; border-top: 1px solid #1f2937;">
+                <div class="nav-section-title">Settings</div>
+                <div class="nav-item" data-tab="settings">⚙️ Settings</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-title" id="headerTitle">Dashboard</div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="refreshBtn">
+                        <span>🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="card-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Scans</div>
+                            <div class="stat-value" id="dashTotalScans">0</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Last 30 days</div>
+                        </div>
+                        <div class="stat-card critical">
+                            <div class="stat-label">Critical</div>
+                            <div class="stat-value" id="dashCritical">0</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Vulnerabilities</div>
+                        </div>
+                        <div class="stat-card high">
+                            <div class="stat-label">High</div>
+                            <div class="stat-value" id="dashHigh">0</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Vulnerabilities</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Cloud Findings</div>
+                            <div class="stat-value" id="dashCloudFindings">0</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Services checked</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Logs Ingested</div>
+                            <div class="stat-value" id="dashLogsIngested">0</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Events</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Compliance Score</div>
+                            <div class="stat-value" id="dashCompliance">0%</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Overall</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="font-size: 16px; font-weight: 600; color: #f3f4f6;">Quick Actions</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <button class="btn btn-primary" onclick="switchTab('scanner')">
+                                <span>➕</span>
+                                <span>New Scan</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="switchTab('cloud')">
+                                <span>☁️</span>
+                                <span>Cloud Check</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="switchTab('logs')">
+                                <span>📥</span>
+                                <span>Ingest Logs</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchTab('tools')">
+                                <span>🛠️</span>
+                                <span>Check Tools</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="font-size: 16px; font-weight: 600; color: #f3f4f6;">Recent Scans</div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="recentScansTable">
+                                <thead>
+                                    <tr>
+                                        <th>Scan ID</th>
+                                        <th>Type</th>
+                                        <th>Target</th>
+                                        <th>Status</th>
+                                        <th>Critical</th>
+                                        <th>High</th>
+                                        <th>Medium</th>
+                                        <th>Started</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentScansBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; color: #6b7280;">No scans yet. Start by running a new scan.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scanner Tab -->
+                <div id="scanner" class="tab-content">
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Security Scanner</div>
+
+                        <div class="form-group">
+                            <div class="form-label">Scan Type</div>
+                            <div class="scan-type-selector">
+                                <button class="scan-type-btn active" data-scan-type="sbom">SBOM</button>
+                                <button class="scan-type-btn" data-scan-type="sca">SCA</button>
+                                <button class="scan-type-btn" data-scan-type="container">Container</button>
+                                <button class="scan-type-btn" data-scan-type="url">URL</button>
+                                <button class="scan-type-btn" data-scan-type="iac">IaC</button>
+                                <button class="scan-type-btn" data-scan-type="dast" style="border-color: #7c3aed; color: #a78bfa;">DAST / ZAP</button>
+                                <button class="scan-type-btn" data-scan-type="full">Full Scan</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-label">Target</div>
+                            <input type="text" class="form-input" id="scanTarget" placeholder="Enter path, URL, or repository...">
+                        </div>
+
+                        <div class="form-group" id="scanOptionsGroup">
+                            <div class="form-label">Options</div>
+                            <div id="scanOptions"></div>
+                        </div>
+
+                        <button class="btn btn-primary" id="runScanBtn" style="margin-top: 12px;">
+                            <span id="runScanBtnIcon">▶</span>
+                            <span id="runScanBtnText">Run Scan</span>
+                        </button>
+                    </div>
+
+                    <div class="card" id="scanResultsCard" style="display: none;">
+                        <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Scan Results</div>
+
+                        <div class="card-grid" id="scanSummaryCards"></div>
+
+                        <div style="margin-bottom: 20px;">
+                            <div class="form-label">Vulnerabilities</div>
+                            <div class="table-wrapper">
+                                <table id="scanResultsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Title</th>
+                                            <th>Component</th>
+                                            <th>Severity</th>
+                                            <th>CVSS</th>
+                                            <th>Fixed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scanResultsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <button class="expand-btn" id="expandRawBtn">View Raw Output</button>
+                        <div class="expand-content" id="rawOutputContent">
+                            <pre id="rawOutput" style="overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cloud Security Tab -->
+                <div id="cloud" class="tab-content">
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Cloud Security Scanner</div>
+
+                        <div class="form-group">
+                            <div class="form-label">Cloud Provider</div>
+                            <div class="provider-selector">
+                                <button class="provider-btn active" data-provider="aws">AWS</button>
+                                <button class="provider-btn" data-provider="azure">Azure</button>
+                                <button class="provider-btn" data-provider="gcp">GCP</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-label">Scanning Tool</div>
+                            <div class="provider-selector">
+                                <button class="provider-btn active" data-tool="prowler">Prowler</button>
+                                <button class="provider-btn" data-tool="scoutsuite">ScoutSuite</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-label">Services to Scan</div>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="svc-iam" checked>
+                                    <label for="svc-iam">IAM</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="svc-ec2" checked>
+                                    <label for="svc-ec2">EC2</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="svc-s3" checked>
+                                    <label for="svc-s3">S3</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="svc-rds" checked>
+                                    <label for="svc-rds">RDS</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="svc-vpc" checked>
+                                    <label for="svc-vpc">VPC</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="svc-kms" checked>
+                                    <label for="svc-kms">KMS</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-label">Compliance Framework</div>
+                            <select class="form-select" id="complianceFramework">
+                                <option>CIS Benchmarks</option>
+                                <option>PCI-DSS</option>
+                                <option>HIPAA</option>
+                                <option>SOC 2</option>
+                                <option>ISO 27001</option>
+                                <option>NIST 800-53</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary" id="runCloudScanBtn" style="margin-top: 12px;">
+                            <span id="runCloudScanIcon">▶</span>
+                            <span id="runCloudScanText">Start Cloud Scan</span>
+                        </button>
+                    </div>
+
+                    <div class="card" id="cloudResultsCard" style="display: none;">
+                        <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Cloud Findings</div>
+
+                        <div style="background: #0f1419; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+                                <div>
+                                    <div class="stat-label">Pass/Fail</div>
+                                    <div style="display: flex; gap: 12px; margin-top: 12px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 12px; color: #22c55e; font-weight: 600; margin-bottom: 4px;">Passed</div>
+                                            <div style="font-size: 20px; font-weight: 700; color: #22c55e;" id="cloudPassed">0</div>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 12px; color: #dc2626; font-weight: 600; margin-bottom: 4px;">Failed</div>
+                                            <div style="font-size: 20px; font-weight: 700; color: #dc2626;" id="cloudFailed">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="stat-label">Compliance Score</div>
+                                    <div style="font-size: 28px; font-weight: 700; color: #10b981; margin-top: 12px;" id="cloudComplianceScore">0%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table id="cloudResultsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Finding</th>
+                                        <th>Severity</th>
+                                        <th>Status</th>
+                                        <th>Remediation</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cloudResultsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Explorer Tab -->
+                <div id="logs" class="tab-content">
+                    <div class="two-column">
+                        <div>
+                            <div class="card">
+                                <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Log Search</div>
+
+                                <div class="form-group">
+                                    <div class="form-label">Keyword Search</div>
+                                    <input type="text" class="form-input" id="logKeyword" placeholder="Search logs...">
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-label">Source</div>
+                                    <select class="form-select" id="logSource">
+                                        <option>All Sources</option>
+                                        <option>CloudTrail</option>
+                                        <option>S3</option>
+                                        <option>VPC Flow Logs</option>
+                                        <option>Application</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-label">Severity</div>
+                                    <select class="form-select" id="logSeverity">
+                                        <option>All Levels</option>
+                                        <option>Critical</option>
+                                        <option>High</option>
+                                        <option>Medium</option>
+                                        <option>Low</option>
+                                        <option>Info</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-label">Actor</div>
+                                    <input type="text" class="form-input" id="logActor" placeholder="User or service...">
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-label">Source IP</div>
+                                    <input type="text" class="form-input" id="logSourceIp" placeholder="IP address...">
+                                </div>
+
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="sqlModeToggle" style="width: 16px; height: 16px; accent-color: #10b981;">
+                                        <span style="font-size: 13px;">Raw SQL Mode</span>
+                                    </label>
+                                </div>
+
+                                <div class="form-group" id="sqlEditorGroup" style="display: none;">
+                                    <div class="form-label">SQL Query</div>
+                                    <textarea class="form-textarea" id="sqlQuery" placeholder="SELECT * FROM logs WHERE..."></textarea>
+                                </div>
+
+                                <button class="btn btn-primary" id="searchLogsBtn" style="width: 100%;">
+                                    <span id="searchLogsBtnIcon">🔍</span>
+                                    <span>Search Logs</span>
+                                </button>
+
+                                <button class="btn btn-secondary" id="ingestLogsBtn" style="width: 100%; margin-top: 12px;">
+                                    <span>📥</span>
+                                    <span>Ingest Logs</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-stats" id="logStatsPanel">
+                            <div class="sidebar-stats-title">Stats</div>
+
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-label">Total Logs</div>
+                                <div class="sidebar-stat-value" id="statsLogCount">0</div>
+                            </div>
+
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-label">Severity Distribution</div>
+                                <div class="mini-bar" id="severityBar"></div>
+                            </div>
+
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-label">Top Actors</div>
+                                <div id="topActors" style="font-size: 12px; color: #d1d5db;">
+                                    <div style="padding: 8px 0; color: #6b7280;">None yet</div>
+                                </div>
+                            </div>
+
+                            <div class="sidebar-stat">
+                                <div class="sidebar-stat-label">Top Actions</div>
+                                <div id="topActions" style="font-size: 12px; color: #d1d5db;">
+                                    <div style="padding: 8px 0; color: #6b7280;">None yet</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 20px;">
+                        <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Log Results</div>
+                        <div class="table-wrapper">
+                            <table id="logsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Source</th>
+                                        <th>Severity</th>
+                                        <th>Actor</th>
+                                        <th>Action</th>
+                                        <th>Target</th>
+                                        <th>Source IP</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; color: #6b7280;">No logs found. Try searching or ingesting logs.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Investigate / Correlate Panel -->
+                    <div class="card" style="margin-top: 20px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                            <div style="font-size:16px; font-weight:600; color:#f3f4f6;">🔗 Investigate &amp; Correlate</div>
+                            <div style="font-size:11px; color:#6b7280;">Cross-reference logs, scans, CVEs, and cloud findings</div>
+                        </div>
+
+                        <!-- Three investigation launchers -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px;">
+                            <!-- Timeline -->
+                            <div style="padding:14px; background:#0f1419; border:1px solid #1f2937; border-radius:6px;">
+                                <div style="font-size:13px; font-weight:600; color:#f3f4f6; margin-bottom:8px;">📅 Unified Timeline</div>
+                                <div style="font-size:12px; color:#9ca3af; margin-bottom:10px;">All events — logs, scans, cloud findings — in one stream</div>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <select class="form-select" id="timelineHours" style="height:32px; font-size:12px; flex:1;">
+                                        <option value="1">Last 1h</option>
+                                        <option value="6">Last 6h</option>
+                                        <option value="24" selected>Last 24h</option>
+                                        <option value="72">Last 3 days</option>
+                                        <option value="168">Last 7 days</option>
+                                    </select>
+                                    <button class="btn btn-primary" style="padding:6px 12px; font-size:12px; white-space:nowrap;" onclick="runInvestigateTimeline()">Run</button>
+                                </div>
+                            </div>
+
+                            <!-- IP Lookup -->
+                            <div style="padding:14px; background:#0f1419; border:1px solid #1f2937; border-radius:6px;">
+                                <div style="font-size:13px; font-weight:600; color:#f3f4f6; margin-bottom:8px;">🌐 IP Profile</div>
+                                <div style="font-size:12px; color:#9ca3af; margin-bottom:10px;">All log events from an IP — auth, API calls, blocks</div>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" class="form-input" id="investigateIP" placeholder="e.g. 203.0.113.45" style="height:32px; font-size:12px; flex:1;">
+                                    <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="runInvestigateIP()">Run</button>
+                                </div>
+                            </div>
+
+                            <!-- Package / CVE Lookup -->
+                            <div style="padding:14px; background:#0f1419; border:1px solid #1f2937; border-radius:6px;">
+                                <div style="font-size:13px; font-weight:600; color:#f3f4f6; margin-bottom:8px;">📦 Package / CVE</div>
+                                <div style="font-size:12px; color:#9ca3af; margin-bottom:10px;">SBOM occurrences, known CVEs, related log activity</div>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" class="form-input" id="investigatePkg" placeholder="e.g. express or CVE-2024-" style="height:32px; font-size:12px; flex:1;">
+                                    <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="runInvestigatePkg()">Run</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="investigateResults" style="display:none;">
+                            <div style="border-top:1px solid #1f2937; padding-top:16px;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                                    <div id="investigateResultsTitle" style="font-size:13px; font-weight:600; color:#10b981;"></div>
+                                    <button class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="document.getElementById('investigateResults').style.display='none'">✕ Close</button>
+                                </div>
+                                <div id="investigateResultsBody"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tools / Onboarding Tab -->
+                <div id="tools" class="tab-content">
+
+                    <!-- Top action bar -->
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="font-size: 16px; font-weight: 600; color: #f3f4f6;">Tools &amp; Configuration</div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-secondary" id="checkAllToolsBtn">
+                                    <span class="spinner" style="display: none;" id="checkToolsSpinner"></span>
+                                    <span>Check All Tools</span>
+                                </button>
+                                <button class="btn btn-secondary" onclick="selectAllTools()">Select All</button>
+                                <button class="btn btn-secondary" onclick="clearSelection()">Clear</button>
+                            </div>
+                        </div>
+                        <p style="font-size: 12px; color: #9ca3af; margin-top: 10px; margin-bottom: 0;">
+                            Tick the checkbox on each tool card to select it, then click <strong style="color:#10b981;">Install Selected</strong> to install in batch, or click <strong style="color:#d1d5db;">Install</strong> / <strong style="color:#d1d5db;">Configure</strong> on individual cards.
+                        </p>
+                    </div>
+
+                    <!-- Tier picker -->
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #d1d5db; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Quick Select by Tier</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;" id="tierButtonsGrid"></div>
+                    </div>
+
+                    <!-- Tool cards grid -->
+                    <div class="tool-grid" id="toolsGrid"></div>
+
+                    <!-- Sticky batch-install bar (shown when ≥1 tool selected) -->
+                    <div id="batchInstallBar" style="display:none; position:sticky; bottom:0; background:#111827; border-top:1px solid #10b981; padding:16px 24px; display:none; align-items:center; justify-content:space-between; gap:12px; z-index:100; margin: 0 -32px -32px;">
+                        <div style="font-size:13px; color:#d1d5db;">
+                            <span id="selectedCount" style="font-weight:700; color:#10b981;">0</span> tool(s) selected
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-secondary btn-small" onclick="clearSelection()">Clear</button>
+                            <button class="btn btn-primary" id="batchInstallBtn" onclick="openBatchInstallModal()">
+                                📦 Install Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings" class="tab-content">
+                    <div class="card">
+                        <div style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin-bottom: 20px;">Settings</div>
+
+                        <div class="form-group">
+                            <div class="form-label">API Endpoint</div>
+                            <input type="text" class="form-input" id="apiEndpoint" value="http://localhost:8000" placeholder="http://localhost:8000">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-label">WebSocket URL</div>
+                            <input type="text" class="form-input" id="wsEndpoint" value="ws://localhost:8000" placeholder="ws://localhost:8000">
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="autoRefresh" checked style="width: 16px; height: 16px; accent-color: #10b981;">
+                                <span style="font-size: 13px;">Auto-refresh data</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="enableNotifications" checked style="width: 16px; height: 16px; accent-color: #10b981;">
+                                <span style="font-size: 13px;">Enable notifications</span>
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary">
+                            <span>💾</span>
+                            <span>Save Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal: Batch Install -->
+    <div class="modal" id="batchInstallModal">
+        <div class="modal-content" style="max-width:720px;">
+            <div class="modal-header">Install Selected Tools</div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:#9ca3af; margin-bottom:16px;">
+                    Choose an install method for each tool, then click <strong style="color:#10b981;">Start Install</strong>.
+                    Installs run sequentially. You can configure each tool after it is installed.
+                </p>
+                <div id="batchInstallList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('batchInstallModal')" id="batchCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="batchStartBtn" onclick="startBatchInstall()">
+                    <span class="spinner" style="display:none;" id="batchSpinner"></span>
+                    <span id="batchStartBtnText">Start Install</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tool Install -->
+    <div class="modal" id="toolInstallModal">
+        <div class="modal-content">
+            <div class="modal-header" id="installModalTitle">Install Tool</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="form-label">Installation Method</div>
+                    <div class="provider-selector" id="installMethodSelector" style="flex-wrap: wrap;">
+                        <button class="provider-btn active" data-install-method="docker" onclick="selectInstallMethod('docker')">🐳 Docker</button>
+                        <button class="provider-btn" data-install-method="native_macos" onclick="selectInstallMethod('native_macos')">🍎 macOS (brew)</button>
+                        <button class="provider-btn" data-install-method="native_linux" onclick="selectInstallMethod('native_linux')">🐧 Linux (snap)</button>
+                        <button class="provider-btn" data-install-method="pip_client" onclick="selectInstallMethod('pip_client')">🐍 pip client</button>
+                        <button class="provider-btn" data-install-method="default" onclick="selectInstallMethod('default')">📦 Default</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Install Command</div>
+                    <div class="install-log" id="installCommandPreview" style="min-height: 48px;"></div>
+                    <div class="field-help" style="margin-top: 6px;">Review the command above before running it.</div>
+                </div>
+
+                <div class="form-group" id="installLogGroup" style="display: none;">
+                    <div class="form-label">Install Output</div>
+                    <div class="install-log" id="installLogOutput">Waiting for output...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('toolInstallModal')">Cancel</button>
+                <button class="btn btn-primary" id="runInstallBtn" onclick="runToolInstall()">
+                    <span class="spinner" style="display: none;" id="installSpinner"></span>
+                    <span id="runInstallBtnText">Run Install</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tool Configure -->
+    <div class="modal" id="toolConfigModal">
+        <div class="modal-content" style="max-width: 640px;">
+            <div class="modal-header" id="configModalTitle">Configure Tool</div>
+            <!-- Tab bar -->
+            <div style="display:flex; gap:0; margin-bottom:20px; border-bottom:1px solid #1f2937;">
+                <button id="cfgTabSettings" onclick="switchConfigTab('settings')" style="padding:8px 16px; background:none; border:none; border-bottom:2px solid #10b981; color:#10b981; font-size:13px; font-weight:600; cursor:pointer; margin-bottom:-1px; transition:all 0.2s;">⚙ Settings</button>
+                <button id="cfgTabPolicies" onclick="switchConfigTab('policies')" style="padding:8px 16px; background:none; border:none; border-bottom:2px solid transparent; color:#6b7280; font-size:13px; cursor:pointer; margin-bottom:-1px; transition:all 0.2s;">📋 Policies</button>
+            </div>
+            <!-- Settings body -->
+            <div class="modal-body" id="configModalBody">
+                <!-- dynamically rendered -->
+            </div>
+            <!-- Policies body -->
+            <div id="configPoliciesBody" style="display:none; margin-bottom:24px;">
+                <!-- dynamically rendered -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPolicyBtn" style="display:none;" onclick="backToPoliciesList()">← Back</button>
+                <button class="btn btn-secondary" onclick="closeModal('toolConfigModal')">Close</button>
+                <button class="btn btn-primary" id="saveConfigBtn" onclick="saveToolConfig()">
+                    <span class="spinner" style="display: none;" id="configSpinner"></span>
+                    <span>Save Configuration</span>
+                </button>
+                <button class="btn btn-primary" id="savePolicyBtn" style="display:none;" onclick="savePolicy()">
+                    <span class="spinner" style="display:none;" id="policySpinner"></span>
+                    <span>Save Policy</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Ingesting Logs -->
+    <div class="modal" id="ingestLogsModal">
+        <div class="modal-content">
+            <div class="modal-header">Ingest Logs</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="form-label">Source Type</div>
+                    <select class="form-select" id="ingestSourceType">
+                        <option>Select a source...</option>
+                        <option value="s3">Amazon S3</option>
+                        <option value="cloudtrail">CloudTrail</option>
+                        <option value="file">Local File</option>
+                        <option value="mock">Mock Data (Demo)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="s3Config" style="display: none;">
+                    <div class="form-label">S3 Bucket</div>
+                    <input type="text" class="form-input" placeholder="s3://bucket-name/path/">
+                </div>
+
+                <div class="form-group" id="fileConfig" style="display: none;">
+                    <div class="form-label">Select File</div>
+                    <input type="file" class="form-input">
+                </div>
+
+                <div style="background: #0f1419; border-radius: 6px; padding: 12px; margin-top: 16px; font-size: 12px; color: #9ca3af;">
+                    <strong>Tip:</strong> Files should be in JSON Lines, CSV, or JSON array format.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('ingestLogsModal')">Cancel</button>
+                <button class="btn btn-primary" id="ingestConfirmBtn">Ingest</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const state = {
+            currentTab: 'dashboard',
+            selectedScanType: 'sbom',
+            selectedProvider: 'aws',
+            selectedTool: 'prowler',
+            apiEndpoint: 'http://localhost:8000',
+            wsEndpoint: 'ws://localhost:8000',
+            ws: null,
+            dashboardStats: {
+                totalScans: 42,
+                criticalVulns: 12,
+                highVulns: 28,
+                cloudFindings: 156,
+                logsIngested: 125430,
+                complianceScore: 72
+            },
+            recentScans: [],
+            scanResults: null
+        };
+
+        // ── Tool Registry (loaded from API, falls back to this) ──────
+        // Keys match tool_registry.json. install_methods drives the Install modal;
+        // config_fields drives the Configure modal.
+        let tools = [
+            {
+                key: 'syft', name: 'Syft', category: 'SBOM',
+                description: 'Generate Software Bill of Materials from container images, filesystems, and archives. Outputs CycloneDX, SPDX, and more.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/anchore/syft',
+                install_methods: [
+                    { id: 'default',      label: 'Auto-install',  icon: '📦', cmd: 'curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin' },
+                    { id: 'native_macos', label: 'macOS (brew)',  icon: '🍎', cmd: 'brew install syft' },
+                    { id: 'native_linux', label: 'Linux (script)',icon: '🐧', cmd: 'curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin' },
+                    { id: 'docker',       label: 'Docker',        icon: '🐳', cmd: 'docker pull anchore/syft:latest' }
+                ],
+                config_fields: [
+                    { key: 'SYFT_BIN',           label: 'Binary Path',           type: 'text',   default: 'syft',           required: false, help: 'Custom path to syft binary (leave blank to use PATH)' },
+                    { key: 'SYFT_OUTPUT_FORMAT', label: 'Default Output Format', type: 'select', default: 'cyclonedx-json', required: false, help: 'Default SBOM output format', options: ['cyclonedx-json', 'spdx-json', 'syft-json', 'table'] },
+                    { key: 'SYFT_SCOPE',         label: 'Scan Scope',            type: 'select', default: 'squashed',       required: false, help: 'squashed = final image layer; all-layers = every layer', options: ['squashed', 'all-layers'] },
+                    { key: 'SYFT_ANCHORE_HOST',  label: 'Anchore Enterprise URL',type: 'text',   default: '',               required: false, help: 'Upload SBOMs to an Anchore Enterprise instance (optional)' }
+                ]
+            },
+            {
+                key: 'grype', name: 'Grype', category: 'SCA',
+                description: 'Vulnerability scanner for container images and filesystems. Accepts SBOM input and uses the Anchore vulnerability database.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/anchore/grype',
+                install_methods: [
+                    { id: 'default',      label: 'Auto-install',  icon: '📦', cmd: 'curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin' },
+                    { id: 'native_macos', label: 'macOS (brew)',  icon: '🍎', cmd: 'brew install grype' },
+                    { id: 'native_linux', label: 'Linux (script)',icon: '🐧', cmd: 'curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin' },
+                    { id: 'docker',       label: 'Docker',        icon: '🐳', cmd: 'docker pull anchore/grype:latest' }
+                ],
+                config_fields: [
+                    { key: 'GRYPE_BIN',              label: 'Binary Path',        type: 'text',   default: 'grype', required: false, help: 'Custom path to grype binary' },
+                    { key: 'GRYPE_DB_AUTO_UPDATE',   label: 'Auto-update DB',     type: 'toggle', default: 'true',  required: false, help: 'Automatically update the vulnerability database on each run' },
+                    { key: 'GRYPE_FAIL_ON_SEVERITY', label: 'Fail on Severity',   type: 'select', default: '',      required: false, help: 'Exit non-zero when vulnerabilities at this level (or above) are found', options: ['', 'negligible', 'low', 'medium', 'high', 'critical'] },
+                    { key: 'GRYPE_ONLY_FIXED',       label: 'Only Fixed Vulns',   type: 'toggle', default: 'false', required: false, help: 'Only report vulnerabilities that have a fix available' },
+                    { key: 'GRYPE_DB_UPDATE_URL',    label: 'DB Update URL',      type: 'text',   default: '',      required: false, help: 'Custom vulnerability DB feed URL (air-gapped environments)' }
+                ]
+            },
+            {
+                key: 'trivy', name: 'Trivy', category: 'Container',
+                description: 'Comprehensive vulnerability scanner for container images, filesystems, git repos, Kubernetes clusters, and cloud resources.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/aquasecurity/trivy',
+                install_methods: [
+                    { id: 'default',      label: 'Auto-install', icon: '📦', cmd: 'curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin' },
+                    { id: 'native_macos', label: 'macOS (brew)', icon: '🍎', cmd: 'brew install trivy' },
+                    { id: 'native_linux', label: 'Linux (apt)',  icon: '🐧', cmd: 'sudo apt-get install -y wget apt-transport-https gnupg lsb-release && wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add - && echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list && sudo apt-get update && sudo apt-get install -y trivy' },
+                    { id: 'docker',       label: 'Docker',       icon: '🐳', cmd: 'docker pull aquasec/trivy:latest' }
+                ],
+                config_fields: [
+                    { key: 'TRIVY_BIN',            label: 'Binary Path',      type: 'text',   default: 'trivy',                          required: false, help: 'Custom path to trivy binary' },
+                    { key: 'TRIVY_SEVERITY',       label: 'Severity Filter',  type: 'select', default: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN',required: false, help: 'Only report vulnerabilities at these severity levels', options: ['CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN', 'CRITICAL,HIGH,MEDIUM', 'CRITICAL,HIGH', 'CRITICAL'] },
+                    { key: 'TRIVY_CACHE_DIR',      label: 'Cache Directory',  type: 'text',   default: '',                               required: false, help: 'Directory for vulnerability DB cache' },
+                    { key: 'TRIVY_SKIP_DB_UPDATE', label: 'Skip DB Update',   type: 'toggle', default: 'false',                          required: false, help: 'Skip database update on each run' },
+                    { key: 'TRIVY_OFFLINE_SCAN',   label: 'Offline Scan',     type: 'toggle', default: 'false',                          required: false, help: 'Disable all network access during scans' },
+                    { key: 'TRIVY_IGNORE_UNFIXED', label: 'Ignore Unfixed',   type: 'toggle', default: 'false',                          required: false, help: 'Do not report vulnerabilities without a fix' },
+                    { key: 'TRIVY_DB_REPOSITORY',  label: 'DB Repository',    type: 'text',   default: '',                               required: false, help: 'Custom vulnerability DB OCI repo (air-gapped)' }
+                ]
+            },
+            {
+                key: 'nuclei', name: 'Nuclei', category: 'URL',
+                description: 'Fast, template-based vulnerability scanner for URLs and APIs. 9000+ community templates covering CVEs, misconfigurations, and exposures.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/projectdiscovery/nuclei',
+                install_methods: [
+                    { id: 'default',      label: 'go install',   icon: '📦', cmd: 'go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest' },
+                    { id: 'native_macos', label: 'macOS (brew)', icon: '🍎', cmd: 'brew install nuclei' },
+                    { id: 'native_linux', label: 'Linux (snap)', icon: '🐧', cmd: 'sudo snap install nuclei' },
+                    { id: 'docker',       label: 'Docker',       icon: '🐳', cmd: 'docker pull projectdiscovery/nuclei:latest' }
+                ],
+                config_fields: [
+                    { key: 'NUCLEI_BIN',           label: 'Binary Path',           type: 'text',     default: 'nuclei', required: false, help: 'Custom path to nuclei binary' },
+                    { key: 'NUCLEI_TEMPLATES_DIR', label: 'Custom Templates Dir',  type: 'text',     default: '',       required: false, help: 'Path to directory with custom Nuclei templates' },
+                    { key: 'NUCLEI_RATE_LIMIT',    label: 'Rate Limit (req/sec)',  type: 'number',   default: '150',    required: false, help: 'Maximum HTTP requests per second' },
+                    { key: 'NUCLEI_CONCURRENCY',   label: 'Concurrency',           type: 'number',   default: '25',     required: false, help: 'Number of concurrent template executions' },
+                    { key: 'NUCLEI_TIMEOUT',       label: 'Request Timeout (sec)', type: 'number',   default: '5',      required: false, help: 'HTTP request timeout in seconds' },
+                    { key: 'NUCLEI_RETRIES',       label: 'Retries',               type: 'number',   default: '1',      required: false, help: 'Number of retries on failed requests' },
+                    { key: 'GITHUB_TOKEN',         label: 'GitHub Token',          type: 'password', default: '',       required: false, help: 'GitHub PAT for accessing private template repositories' }
+                ]
+            },
+            {
+                key: 'prowler', name: 'Prowler', category: 'Cloud',
+                description: 'Cloud security posture assessment against CIS, SOC2, PCI-DSS, HIPAA, GDPR, and NIST for AWS, Azure, and GCP.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/prowler-cloud/prowler',
+                install_methods: [
+                    { id: 'pip',          label: 'pip install',  icon: '🐍', cmd: 'pip install prowler' },
+                    { id: 'docker',       label: 'Docker',       icon: '🐳', cmd: 'docker pull toniblyx/prowler:latest' },
+                    { id: 'native_macos', label: 'macOS (brew)', icon: '🍎', cmd: 'brew install prowler' },
+                    { id: 'native_linux', label: 'Linux (pip3)', icon: '🐧', cmd: 'pip3 install prowler' }
+                ],
+                config_fields: [
+                    { key: 'AWS_PROFILE',                   label: 'AWS Profile',              type: 'text',     default: '',          required: false, help: 'AWS CLI profile name from ~/.aws/credentials' },
+                    { key: 'AWS_REGION',                    label: 'AWS Region',               type: 'text',     default: 'us-east-1', required: false, help: 'Default AWS region to scan' },
+                    { key: 'AWS_ACCESS_KEY_ID',             label: 'AWS Access Key ID',        type: 'text',     default: '',          required: false, help: 'AWS access key ID (prefer named profile)' },
+                    { key: 'AWS_SECRET_ACCESS_KEY',         label: 'AWS Secret Access Key',    type: 'password', default: '',          required: false, help: 'AWS secret access key' },
+                    { key: 'AWS_SESSION_TOKEN',             label: 'AWS Session Token',        type: 'password', default: '',          required: false, help: 'AWS STS session token (temporary credentials)' },
+                    { key: 'AZURE_SUBSCRIPTION_ID',         label: 'Azure Subscription ID',    type: 'text',     default: '',          required: false, help: 'Azure subscription to scan' },
+                    { key: 'AZURE_TENANT_ID',               label: 'Azure Tenant ID',          type: 'text',     default: '',          required: false, help: 'Azure Active Directory tenant ID' },
+                    { key: 'AZURE_CLIENT_ID',               label: 'Azure Client ID',          type: 'text',     default: '',          required: false, help: 'Azure service principal app ID' },
+                    { key: 'AZURE_CLIENT_SECRET',           label: 'Azure Client Secret',      type: 'password', default: '',          required: false, help: 'Azure service principal secret' },
+                    { key: 'GCP_PROJECT_ID',                label: 'GCP Project ID',           type: 'text',     default: '',          required: false, help: 'Google Cloud project to scan' },
+                    { key: 'GOOGLE_APPLICATION_CREDENTIALS',label: 'GCP Service Account JSON', type: 'text',     default: '',          required: false, help: 'Path to GCP service account key JSON file' }
+                ]
+            },
+            {
+                key: 'scoutsuite', name: 'ScoutSuite', category: 'Cloud',
+                description: 'Multi-cloud security auditing tool for AWS, Azure, GCP, Alibaba, and Oracle. Produces detailed HTML reports.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/nccgroup/ScoutSuite',
+                install_methods: [
+                    { id: 'pip',          label: 'pip install',  icon: '🐍', cmd: 'pip install scoutsuite' },
+                    { id: 'docker',       label: 'Docker',       icon: '🐳', cmd: 'docker pull rossja/ncc-scoutsuite:latest' },
+                    { id: 'native_macos', label: 'macOS (pip3)', icon: '🍎', cmd: 'pip3 install scoutsuite' },
+                    { id: 'native_linux', label: 'Linux (pip3)', icon: '🐧', cmd: 'pip3 install scoutsuite' }
+                ],
+                config_fields: [
+                    { key: 'AWS_PROFILE',                   label: 'AWS Profile',              type: 'text',     default: '',          required: false, help: 'AWS CLI profile name' },
+                    { key: 'AWS_REGION',                    label: 'AWS Region',               type: 'text',     default: 'us-east-1', required: false, help: 'Default AWS region' },
+                    { key: 'AWS_ACCESS_KEY_ID',             label: 'AWS Access Key ID',        type: 'text',     default: '',          required: false, help: 'AWS access key ID' },
+                    { key: 'AWS_SECRET_ACCESS_KEY',         label: 'AWS Secret Access Key',    type: 'password', default: '',          required: false, help: 'AWS secret access key' },
+                    { key: 'AZURE_SUBSCRIPTION_ID',         label: 'Azure Subscription ID',    type: 'text',     default: '',          required: false, help: 'Azure subscription to audit' },
+                    { key: 'AZURE_TENANT_ID',               label: 'Azure Tenant ID',          type: 'text',     default: '',          required: false, help: 'Azure AD tenant ID' },
+                    { key: 'GCP_PROJECT_ID',                label: 'GCP Project ID',           type: 'text',     default: '',          required: false, help: 'Google Cloud project to audit' },
+                    { key: 'GOOGLE_APPLICATION_CREDENTIALS',label: 'GCP Service Account JSON', type: 'text',     default: '',          required: false, help: 'Path to GCP service account key JSON file' },
+                    { key: 'SCOUTSUITE_REPORT_DIR',         label: 'Report Output Directory',  type: 'text',     default: './scoutsuite-report', required: false, help: 'Directory to write HTML audit reports' }
+                ]
+            },
+            {
+                key: 'checkov', name: 'Checkov', category: 'IaC',
+                description: 'Static analysis for IaC — Terraform, CloudFormation, Kubernetes, Dockerfiles, Helm, ARM, Bicep, and Ansible.',
+                installed: false, version: 'Unknown',
+                docs: 'https://github.com/bridgecrewio/checkov',
+                install_methods: [
+                    { id: 'pip',          label: 'pip install',  icon: '🐍', cmd: 'pip install checkov' },
+                    { id: 'native_macos', label: 'macOS (brew)', icon: '🍎', cmd: 'brew install checkov' },
+                    { id: 'native_linux', label: 'Linux (pip3)', icon: '🐧', cmd: 'pip3 install checkov' },
+                    { id: 'docker',       label: 'Docker',       icon: '🐳', cmd: 'docker pull bridgecrew/checkov:latest' }
+                ],
+                config_fields: [
+                    { key: 'CHECKOV_API_KEY',    label: 'Bridgecrew API Key',             type: 'password', default: '',      required: false, help: 'Enables Bridgecrew cloud policies, reporting, and platform integration' },
+                    { key: 'CHECKOV_SKIP_CHECK', label: 'Skip Checks (comma-separated)',  type: 'text',     default: '',      required: false, help: 'Checks to skip, e.g. CKV_AWS_18,CKV_AWS_20' },
+                    { key: 'CHECKOV_CHECK',      label: 'Run Only (comma-separated)',     type: 'text',     default: '',      required: false, help: 'Run only these specific checks (leave empty to run all)' },
+                    { key: 'CHECKOV_SOFT_FAIL',  label: 'Soft Fail Mode',                type: 'toggle',   default: 'false', required: false, help: 'Always exit 0 — useful for CI pipelines that should not block on findings' },
+                    { key: 'CHECKOV_COMPACT',    label: 'Compact Output',                type: 'toggle',   default: 'false', required: false, help: 'Suppress passing checks in output' },
+                    { key: 'CHECKOV_QUIET',      label: 'Quiet Mode',                    type: 'toggle',   default: 'false', required: false, help: 'Only display failing checks' }
+                ]
+            },
+            {
+                key: 'zap', name: 'OWASP ZAP', category: 'DAST',
+                description: 'Industry-leading open-source DAST scanner. Finds XSS, SQL injection, CSRF, missing headers, and hundreds of other vulnerabilities in live web applications and APIs.',
+                installed: false, version: 'Unknown',
+                docs: 'https://www.zaproxy.org/',
+                install_methods: [
+                    { id: 'docker',       label: 'Docker (recommended)',icon: '🐳', cmd: 'docker pull ghcr.io/zaproxy/zaproxy:stable' },
+                    { id: 'native_macos', label: 'macOS (brew cask)',   icon: '🍎', cmd: 'brew install --cask owasp-zap' },
+                    { id: 'native_linux', label: 'Linux (snap)',        icon: '🐧', cmd: 'sudo snap install zaproxy --classic' },
+                    { id: 'pip',          label: 'Python client only',  icon: '🐍', cmd: 'pip install zaproxy' }
+                ],
+                config_fields: [
+                    { key: 'ZAP_USE_DOCKER', label: 'Use Docker (recommended)', type: 'toggle',   default: 'true',     required: false, help: 'Run ZAP via Docker image. Easiest setup, no native install needed.' },
+                    { key: 'ZAP_HOST',       label: 'ZAP Daemon Host',          type: 'text',     default: 'localhost', required: false, help: 'Hostname of a running ZAP daemon (API mode only)' },
+                    { key: 'ZAP_PORT',       label: 'ZAP Daemon Port',          type: 'number',   default: '8080',      required: false, help: 'Port for the ZAP REST API (API mode only)' },
+                    { key: 'ZAP_API_KEY',    label: 'ZAP API Key',              type: 'password', default: '',          required: false, help: 'API key set in ZAP Tools > Options > API (API mode only)' }
+                ]
+            }
+        ];
+
+        // ── Tier definitions (mirrors tool_registry.json) ───────────
+        const TIERS = {
+            starter: { name: 'Starter',       tools: ['syft', 'grype', 'trivy'],                                                         description: 'SBOM + vulnerability scanning. Zero cloud creds needed.' },
+            scanner: { name: 'Full Scanner',  tools: ['syft', 'grype', 'trivy', 'nuclei', 'checkov'],                                    description: 'Starter + URL endpoint scanning + IaC checks.' },
+            cloud:   { name: 'Cloud Security',tools: ['syft', 'grype', 'trivy', 'nuclei', 'checkov', 'prowler', 'scoutsuite'],           description: 'Full Scanner + multi-cloud posture assessment.' },
+            dast:    { name: 'DAST Bundle',   tools: ['syft', 'grype', 'trivy', 'nuclei', 'checkov', 'zap'],                             description: 'Full Scanner + OWASP ZAP dynamic testing.' },
+            full:    { name: 'Everything',    tools: ['syft', 'grype', 'trivy', 'nuclei', 'checkov', 'prowler', 'scoutsuite', 'zap'],    description: 'Complete suite — all tools.' },
+            custom:  { name: 'Custom',        tools: [],                                                                                   description: 'Pick exactly the tools you need.' },
+        };
+
+        // Selected tools (for batch install)
+        const selectedTools = new Set();
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            loadDashboardData();
+            initializeWebSocket();
+            loadToolsFromRegistry();  // merge API registry data into tools array
+        });
+
+        function initializeEventListeners() {
+            // Tab Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    switchTab(tab);
+                });
+            });
+
+            // Scan Type Selection
+            document.querySelectorAll('.scan-type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectScanType(this.getAttribute('data-scan-type'));
+                });
+            });
+
+            // Provider Selection
+            document.querySelectorAll('[data-provider]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    state.selectedProvider = this.getAttribute('data-provider');
+                    document.querySelectorAll('[data-provider]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Tool Selection
+            document.querySelectorAll('[data-tool]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    state.selectedTool = this.getAttribute('data-tool');
+                    document.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Scanner Buttons
+            document.getElementById('runScanBtn').addEventListener('click', runScan);
+            document.getElementById('runCloudScanBtn').addEventListener('click', runCloudScan);
+            document.getElementById('searchLogsBtn').addEventListener('click', searchLogs);
+            document.getElementById('ingestLogsBtn').addEventListener('click', openIngestModal);
+            document.getElementById('checkAllToolsBtn').addEventListener('click', checkAllTools);
+            document.getElementById('refreshBtn').addEventListener('click', refreshDashboard);
+
+            // Log SQL Mode Toggle
+            document.getElementById('sqlModeToggle').addEventListener('change', function() {
+                document.getElementById('sqlEditorGroup').style.display = this.checked ? 'block' : 'none';
+            });
+
+            // Ingest Source Type Selection
+            document.getElementById('ingestSourceType').addEventListener('change', function() {
+                document.getElementById('s3Config').style.display = this.value === 's3' ? 'block' : 'none';
+                document.getElementById('fileConfig').style.display = this.value === 'file' ? 'block' : 'none';
+            });
+
+            // Expandable Sections
+            document.querySelectorAll('.expand-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const contentId = this.id.replace('expand', '') + 'Content';
+                    const content = document.getElementById(contentId);
+                    if (content) {
+                        content.classList.toggle('visible');
+                        this.classList.toggle('expanded');
+                    }
+                });
+            });
+
+            // Render Tools Grid
+            renderToolsGrid();
+
+            // Load initial dashboard
+            loadDashboardData();
+        }
+
+        function switchTab(tabName) {
+            // Update state
+            state.currentTab = tabName;
+
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-tab') === tabName) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Update header title
+            const titleMap = {
+                dashboard: 'Dashboard',
+                scanner: 'Security Scanner',
+                cloud: 'Cloud Security',
+                logs: 'Log Explorer',
+                tools: 'Tools & Configuration',
+                settings: 'Settings'
+            };
+            document.getElementById('headerTitle').textContent = titleMap[tabName] || tabName;
+        }
+
+        function selectScanType(scanType) {
+            state.selectedScanType = scanType;
+            document.querySelectorAll('.scan-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-scan-type') === scanType) {
+                    btn.classList.add('active');
+                }
+            });
+            updateScanOptions();
+        }
+
+        const SCAN_TYPE_TOOL = { sbom: 'syft', sca: 'grype', container: 'trivy', url: 'nuclei', iac: 'checkov', dast: 'zap' };
+
+        function updateScanOptions() {
+            const optionsContainer = document.getElementById('scanOptions');
+            optionsContainer.innerHTML = '';
+
+            const toolKey = SCAN_TYPE_TOOL[state.selectedScanType];
+
+            const coreHtml = {
+                sbom: '<label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" checked style="width: 16px; height: 16px; accent-color: #10b981;"><span>Include nested components</span></label>',
+                sca: '<select class="form-select" style="margin-bottom: 12px;"><option>All Vulnerabilities</option><option>Known Vulnerabilities Only</option></select>',
+                container: '<input type="text" class="form-input" placeholder="Image name (e.g., nginx:latest)">',
+                url: buildURLScanOptions(),
+                iac: '<select class="form-select"><option>Terraform</option><option>CloudFormation</option><option>Kubernetes</option><option>Docker</option><option>Auto-detect</option></select>',
+                full: '<label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" checked style="width: 16px; height: 16px; accent-color: #10b981;"><span>Run all available scans</span></label>',
+                dast: buildZAPOptions(),
+            };
+
+            const core = coreHtml[state.selectedScanType] || '';
+            // url panel includes its own policy bar; full has no tool
+            if (state.selectedScanType === 'url' || state.selectedScanType === 'full') {
+                optionsContainer.innerHTML = core;
+            } else if (toolKey) {
+                optionsContainer.innerHTML = buildPolicyBar(toolKey) + core;
+            } else {
+                optionsContainer.innerHTML = core;
+            }
+
+            // Wire up dynamic ZAP auth fields after inserting HTML
+            if (state.selectedScanType === 'dast') {
+                document.getElementById('zapAuthMethod').addEventListener('change', updateZAPAuthFields);
+                document.getElementById('zapScanMode').addEventListener('change', updateZAPScanModeFields);
+                updateZAPAuthFields();
+                updateZAPScanModeFields();
+            }
+
+            // Load policies for the active tool
+            if (toolKey) loadPoliciesForTool(toolKey);
+        }
+
+        function buildZAPOptions() {
+            return `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-label">Scan Mode</div>
+                    <select class="form-select" id="zapScanMode">
+                        <option value="baseline">Baseline (Passive — safe for prod)</option>
+                        <option value="full">Full Scan (Active — aggressive)</option>
+                        <option value="api">API Scan (OpenAPI / GraphQL)</option>
+                    </select>
+                    <div class="field-help">Baseline: spider only. Full: spider + active attacks.</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-label">Authentication Method</div>
+                    <select class="form-select" id="zapAuthMethod">
+                        <option value="none">None</option>
+                        <option value="basic">HTTP Basic Auth</option>
+                        <option value="form">Form-Based Login</option>
+                        <option value="bearer">Bearer Token</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Auth fields (shown dynamically) -->
+            <div id="zapAuthFields" style="margin-bottom: 16px;"></div>
+
+            <!-- Scan mode extra fields -->
+            <div id="zapScanModeFields" style="margin-bottom: 16px;"></div>
+
+            <!-- Advanced options (collapsible) -->
+            <button class="expand-btn" onclick="toggleExpandable(this)" style="margin-bottom: 8px;">Advanced Options</button>
+            <div class="expand-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-label">Attack Strength</div>
+                        <select class="form-select" id="zapAttackStrength">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="insane">Insane</option>
+                        </select>
+                        <div class="field-help">Only applies to Full Scan mode.</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-label">Alert Threshold</div>
+                        <select class="form-select" id="zapAlertThreshold">
+                            <option value="low">Low (more alerts)</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High (fewer alerts)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <div class="form-label">Include URL Patterns (one per line)</div>
+                    <textarea class="form-textarea" id="zapIncludePatterns" style="min-height: 60px;" placeholder="https://target.com/app/.*"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-label">Exclude URL Patterns (one per line)</div>
+                    <textarea class="form-textarea" id="zapExcludePatterns" style="min-height: 60px;" placeholder="https://target.com/logout.*"></textarea>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px 14px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 6px; font-size: 12px; color: #c4b5fd;">
+                ⚠️ <strong>Full Scan</strong> sends active attack probes. Only scan targets you own or have written permission to test.
+            </div>`;
+        }
+
+        function updateZAPAuthFields() {
+            const method = document.getElementById('zapAuthMethod').value;
+            const container = document.getElementById('zapAuthFields');
+            const templates = {
+                none: '',
+                basic: `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-label">Username</div>
+                            <input type="text" class="form-input" id="zapAuthUser" placeholder="admin">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-label">Password</div>
+                            <input type="password" class="form-input" id="zapAuthPass" placeholder="••••••••">
+                        </div>
+                    </div>`,
+                form: `
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <div class="form-label">Login URL</div>
+                        <input type="text" class="form-input" id="zapLoginUrl" placeholder="https://target.com/login">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-label">User Field</div>
+                            <input type="text" class="form-input" id="zapUserField" placeholder="username">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-label">Pass Field</div>
+                            <input type="text" class="form-input" id="zapPassField" placeholder="password">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-label">Username</div>
+                            <input type="text" class="form-input" id="zapFormUser" placeholder="admin">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-label">Password</div>
+                            <input type="password" class="form-input" id="zapFormPass" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 8px; margin-bottom: 0;">
+                        <div class="form-label">Logged-in Indicator (regex)</div>
+                        <input type="text" class="form-input" id="zapLoggedInIndicator" placeholder="Welcome, .* | Logout">
+                        <div class="field-help">ZAP uses this to detect when login succeeded.</div>
+                    </div>`,
+                bearer: `
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-label">Bearer Token</div>
+                        <input type="password" class="form-input" id="zapBearerToken" placeholder="eyJhbGciOiJIUzI1NiIs...">
+                        <div class="field-help">Sent as: Authorization: Bearer &lt;token&gt;</div>
+                    </div>`,
+            };
+            container.innerHTML = templates[method] || '';
+        }
+
+        function updateZAPScanModeFields() {
+            const mode = document.getElementById('zapScanMode').value;
+            const container = document.getElementById('zapScanModeFields');
+            if (mode === 'api') {
+                container.innerHTML = `
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <div class="form-label">API Spec URL</div>
+                        <input type="text" class="form-input" id="zapApiSpecUrl" placeholder="https://api.target.com/openapi.json">
+                        <div class="field-help">Link to OpenAPI, Swagger, GraphQL, or SOAP spec.</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-label">Spec Format</div>
+                        <select class="form-select" id="zapApiFormat">
+                            <option value="openapi">OpenAPI / Swagger</option>
+                            <option value="graphql">GraphQL</option>
+                            <option value="soap">SOAP / WSDL</option>
+                        </select>
+                    </div>`;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        function collectZAPOptions() {
+            const mode = document.getElementById('zapScanMode')?.value || 'baseline';
+            const authMethod = document.getElementById('zapAuthMethod')?.value || 'none';
+            const authConfig = {};
+
+            if (authMethod === 'basic') {
+                authConfig.username = document.getElementById('zapAuthUser')?.value || '';
+                authConfig.password = document.getElementById('zapAuthPass')?.value || '';
+            } else if (authMethod === 'form') {
+                authConfig.login_url = document.getElementById('zapLoginUrl')?.value || '';
+                authConfig.username_field = document.getElementById('zapUserField')?.value || 'username';
+                authConfig.password_field = document.getElementById('zapPassField')?.value || 'password';
+                authConfig.username = document.getElementById('zapFormUser')?.value || '';
+                authConfig.password = document.getElementById('zapFormPass')?.value || '';
+                authConfig.logged_in_indicator = document.getElementById('zapLoggedInIndicator')?.value || '';
+            } else if (authMethod === 'bearer') {
+                authConfig.token = document.getElementById('zapBearerToken')?.value || '';
+            }
+
+            const includeRaw = document.getElementById('zapIncludePatterns')?.value || '';
+            const excludeRaw = document.getElementById('zapExcludePatterns')?.value || '';
+
+            return {
+                scan_mode: mode,
+                auth_method: authMethod,
+                auth_config: authConfig,
+                attack_strength: document.getElementById('zapAttackStrength')?.value || 'medium',
+                alert_threshold: document.getElementById('zapAlertThreshold')?.value || 'medium',
+                api_spec_url: document.getElementById('zapApiSpecUrl')?.value || '',
+                api_spec_format: document.getElementById('zapApiFormat')?.value || 'openapi',
+                include_patterns: includeRaw.split('\n').map(s => s.trim()).filter(Boolean),
+                exclude_patterns: excludeRaw.split('\n').map(s => s.trim()).filter(Boolean),
+            };
+        }
+
+        // ── Policy + Nuclei infrastructure ───────────────────────────
+
+        const POLICY_FIELDS = {
+            syft:    [],
+            grype:   [
+                { key: 'severity',    type: 'select',     options: ['critical', 'critical,high', 'critical,high,medium', 'all'] },
+                { key: 'only_fixed',  type: 'toggle' },
+                { key: 'ignore_cves', type: 'textarea',   placeholder: 'CVE-2021-44228\nCVE-2022-26134' },
+            ],
+            trivy:   [
+                { key: 'severity',       type: 'multicheck', options: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] },
+                { key: 'ignore_unfixed', type: 'toggle' },
+                { key: 'skip_dirs',      type: 'taglist',    placeholder: 'node_modules\n.git' },
+            ],
+            checkov: [
+                { key: 'skip_checks', type: 'textarea',  placeholder: 'CKV_AWS_1\nCKV_AWS_2' },
+                { key: 'run_checks',  type: 'textarea',  placeholder: 'CKV_AWS_18\nCKV_AWS_52' },
+                { key: 'framework',   type: 'select',    options: ['all', 'terraform', 'cloudformation', 'kubernetes', 'dockerfile'] },
+                { key: 'soft_fail',   type: 'toggle' },
+            ],
+            prowler: [
+                { key: 'services',    type: 'multicheck', options: ['iam', 's3', 'ec2', 'rds', 'cloudtrail', 'vpc', 'kms', 'lambda'] },
+                { key: 'compliance',  type: 'multicheck', options: ['cis', 'soc2', 'pci-dss', 'hipaa', 'nist-800-53', 'gdpr'] },
+                { key: 'regions',     type: 'text',       placeholder: 'us-east-1, eu-west-1' },
+                { key: 'severity',    type: 'select',     options: ['critical', 'high', 'medium', 'low'] },
+            ],
+            nuclei:  [
+                { key: 'categories',  type: 'multicheck', options: ['cves', 'misconfigs', 'exposures', 'default-logins', 'network', 'fuzzing', 'headless'] },
+                { key: 'severity',    type: 'multicheck', options: ['critical', 'high', 'medium', 'low', 'info'] },
+                { key: 'tags',        type: 'text',       placeholder: 'rce,sqli,xss' },
+                { key: 'rate_limit',  type: 'number',     default: 150 },
+                { key: 'concurrency', type: 'number',     default: 25 },
+            ],
+            zap:     [
+                { key: 'scan_mode',        type: 'select',  options: ['baseline', 'full', 'api'] },
+                { key: 'attack_strength',  type: 'select',  options: ['low', 'medium', 'high', 'insane'] },
+                { key: 'alert_threshold',  type: 'select',  options: ['low', 'medium', 'high'] },
+                { key: 'exclude_patterns', type: 'taglist', placeholder: '/logout.*\n/static/.*' },
+            ],
+        };
+
+        let _activePolicies = {};   // toolKey → policyName
+        let _cachedPolicies = {};   // toolKey → policies[]
+        let _editingPolicy  = null;
+
+        function _fieldLabel(key) {
+            return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        function buildPolicyBar(toolKey) {
+            return `<div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #1f2937;">
+                <span style="font-size:12px; color:#9ca3af; white-space:nowrap;">Apply policy:</span>
+                <select class="form-select" data-policy-tool="${toolKey}" style="flex:1; height:32px; font-size:12px; padding:4px 8px;" onchange="applyPolicy('${toolKey}', this.value)">
+                    <option value="">None</option>
+                </select>
+                <button class="btn btn-secondary" style="padding:5px 10px; font-size:12px; white-space:nowrap;" onclick="openConfigForPolicies('${toolKey}')">+ New</button>
+            </div>`;
+        }
+
+        function buildURLScanOptions() {
+            return `${buildPolicyBar('nuclei')}
+            <div class="form-group">
+                <div class="form-label">Template Categories</div>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; padding:10px; background:#0f1419; border-radius:4px; border:1px solid #1f2937;">
+                    ${[['cves','CVEs'],['misconfigs','Misconfigs'],['exposures','Exposures'],['default-logins','Default Creds'],['network','Network'],['fuzzing','Fuzzing'],['headless','Headless']].map(([id, label]) =>
+                        `<label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                            <input type="checkbox" id="nuclei-cat-${id}" ${['cves','misconfigs','exposures'].includes(id) ? 'checked' : ''} style="width:14px; height:14px; accent-color:#10b981;"> ${label}
+                        </label>`
+                    ).join('')}
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <div class="form-label">Severity</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; padding:8px; background:#0f1419; border-radius:4px; border:1px solid #1f2937;">
+                        ${[['critical','#dc2626'],['high','#ea580c'],['medium','#eab308'],['low','#10b981'],['info','#3b82f6']].map(([s, col]) =>
+                            `<label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer;">
+                                <input type="checkbox" id="nuclei-sev-${s}" checked style="width:13px; height:13px; accent-color:${col};"> <span style="color:${col};">${s}</span>
+                            </label>`
+                        ).join('')}
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <div class="form-label">Tags <span style="color:#6b7280; font-size:11px;">(comma-separated)</span></div>
+                    <input type="text" class="form-input" id="nucleiTags" placeholder="e.g., cve,rce,sqli">
+                </div>
+            </div>
+            <button class="expand-btn" onclick="toggleExpandable(this)" style="margin-bottom:8px;">Advanced</button>
+            <div class="expand-content">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <div class="form-label">Rate Limit <span style="color:#6b7280; font-size:10px;">req/s</span></div>
+                        <input type="number" class="form-input" id="nucleiRateLimit" value="150" min="1" max="1000">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <div class="form-label">Concurrency</div>
+                        <input type="number" class="form-input" id="nucleiConcurrency" value="25" min="1" max="200">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <div class="form-label">Timeout <span style="color:#6b7280; font-size:10px;">sec</span></div>
+                        <input type="number" class="form-input" id="nucleiTimeout" value="10" min="1" max="60">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <div class="form-label">Custom Templates Path</div>
+                    <input type="text" class="form-input" id="nucleiCustomTemplates" placeholder="/path/to/templates or github:user/repo">
+                    <div class="field-help">Local directory or GitHub repo of custom Nuclei templates.</div>
+                </div>
+            </div>`;
+        }
+
+        function collectURLScanOptions() {
+            const categories = ['cves','misconfigs','exposures','default-logins','network','fuzzing','headless']
+                .filter(c => document.getElementById(`nuclei-cat-${c}`)?.checked);
+            const severity = ['critical','high','medium','low','info']
+                .filter(s => document.getElementById(`nuclei-sev-${s}`)?.checked);
+            return {
+                categories,
+                severity,
+                tags:             document.getElementById('nucleiTags')?.value || '',
+                rate_limit:       parseInt(document.getElementById('nucleiRateLimit')?.value  || '150'),
+                concurrency:      parseInt(document.getElementById('nucleiConcurrency')?.value || '25'),
+                timeout:          parseInt(document.getElementById('nucleiTimeout')?.value    || '10'),
+                custom_templates: document.getElementById('nucleiCustomTemplates')?.value || '',
+            };
+        }
+
+        async function loadPoliciesForTool(toolKey) {
+            try {
+                const res = await fetch(`${state.apiEndpoint}/tools/policies/${toolKey}`);
+                const data = await res.json();
+                _cachedPolicies[toolKey] = data.policies || [];
+            } catch (_) {
+                _cachedPolicies[toolKey] = _cachedPolicies[toolKey] || [];
+            }
+            _refreshPolicyPicker(toolKey);
+        }
+
+        function _refreshPolicyPicker(toolKey) {
+            document.querySelectorAll(`[data-policy-tool="${toolKey}"]`).forEach(sel => {
+                const current = sel.value;
+                const policies = _cachedPolicies[toolKey] || [];
+                sel.innerHTML = '<option value="">None</option>' +
+                    policies.map(p => `<option value="${p.name}" ${p.name === current ? 'selected' : ''}>${p.name}</option>`).join('');
+                if (_activePolicies[toolKey]) sel.value = _activePolicies[toolKey];
+            });
+        }
+
+        function applyPolicy(toolKey, policyName) {
+            _activePolicies[toolKey] = policyName;
+            if (!policyName) return;
+            const policy = (_cachedPolicies[toolKey] || []).find(p => p.name === policyName);
+            if (!policy?.settings) return;
+            const s = policy.settings;
+
+            if (toolKey === 'nuclei') {
+                const catArr = Array.isArray(s.categories) ? s.categories : (s.categories || '').split(',').map(x => x.trim()).filter(Boolean);
+                ['cves','misconfigs','exposures','default-logins','network','fuzzing','headless'].forEach(c => {
+                    const el = document.getElementById(`nuclei-cat-${c}`);
+                    if (el) el.checked = catArr.includes(c);
+                });
+                const sevArr = Array.isArray(s.severity) ? s.severity : (s.severity || '').split(',').map(x => x.trim()).filter(Boolean);
+                ['critical','high','medium','low','info'].forEach(sv => {
+                    const el = document.getElementById(`nuclei-sev-${sv}`);
+                    if (el) el.checked = sevArr.length === 0 || sevArr.includes(sv);
+                });
+                if (s.tags)        { const el = document.getElementById('nucleiTags');        if (el) el.value = s.tags; }
+                if (s.rate_limit)  { const el = document.getElementById('nucleiRateLimit');  if (el) el.value = s.rate_limit; }
+                if (s.concurrency) { const el = document.getElementById('nucleiConcurrency'); if (el) el.value = s.concurrency; }
+            } else if (toolKey === 'zap') {
+                if (s.scan_mode)       { const el = document.getElementById('zapScanMode');       if (el) { el.value = s.scan_mode; updateZAPScanModeFields(); } }
+                if (s.attack_strength) { const el = document.getElementById('zapAttackStrength'); if (el) el.value = s.attack_strength; }
+                if (s.alert_threshold) { const el = document.getElementById('zapAlertThreshold'); if (el) el.value = s.alert_threshold; }
+                if (s.exclude_patterns) {
+                    const el = document.getElementById('zapExcludePatterns');
+                    if (el) el.value = Array.isArray(s.exclude_patterns) ? s.exclude_patterns.join('\n') : s.exclude_patterns;
+                }
+            }
+            showToast(`Policy "${policyName}" applied`, 'info');
+        }
+
+        async function openConfigForPolicies(toolKey) {
+            await openConfigModal(toolKey);
+            switchConfigTab('policies');
+        }
+
+        function switchConfigTab(tab) {
+            const sBtn = document.getElementById('cfgTabSettings');
+            const pBtn = document.getElementById('cfgTabPolicies');
+            const sBody = document.getElementById('configModalBody');
+            const pBody = document.getElementById('configPoliciesBody');
+            const saveConfigBtn = document.getElementById('saveConfigBtn');
+            const savePolicyBtn = document.getElementById('savePolicyBtn');
+            const cancelPolicyBtn = document.getElementById('cancelPolicyBtn');
+
+            if (tab === 'settings') {
+                sBtn.style.borderBottomColor = '#10b981'; sBtn.style.color = '#10b981'; sBtn.style.fontWeight = '600';
+                pBtn.style.borderBottomColor = 'transparent'; pBtn.style.color = '#6b7280'; pBtn.style.fontWeight = '500';
+                sBody.style.display = ''; pBody.style.display = 'none';
+                saveConfigBtn.style.display = ''; savePolicyBtn.style.display = 'none'; cancelPolicyBtn.style.display = 'none';
+            } else {
+                sBtn.style.borderBottomColor = 'transparent'; sBtn.style.color = '#6b7280'; sBtn.style.fontWeight = '500';
+                pBtn.style.borderBottomColor = '#10b981'; pBtn.style.color = '#10b981'; pBtn.style.fontWeight = '600';
+                sBody.style.display = 'none'; pBody.style.display = '';
+                saveConfigBtn.style.display = 'none'; savePolicyBtn.style.display = 'none'; cancelPolicyBtn.style.display = 'none';
+                renderPoliciesList(_configToolKey, _cachedPolicies[_configToolKey] || []);
+            }
+        }
+
+        function renderPoliciesList(toolKey, policies) {
+            const body = document.getElementById('configPoliciesBody');
+            if (!policies.length) {
+                body.innerHTML = `<div style="text-align:center; padding:32px; color:#6b7280;">
+                    <div style="font-size:32px; margin-bottom:12px;">📋</div>
+                    <div style="font-size:13px; margin-bottom:16px;">No policies yet. Create one to save reusable scan settings.</div>
+                    <button class="btn btn-primary" onclick="openPolicyEditor('${toolKey}')">+ Create Policy</button>
+                </div>`;
+                return;
+            }
+            const cards = policies.map(p => {
+                const settingsText = Object.entries(p.settings || {})
+                    .slice(0, 4)
+                    .map(([k, v]) => `<span style="margin-right:8px;"><b>${k}:</b> ${Array.isArray(v) ? v.join(', ') : v}</span>`)
+                    .join('');
+                const pJson = JSON.stringify(p).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `<div style="padding:12px 14px; background:#0f1419; border:1px solid #1f2937; border-radius:6px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:13px; font-weight:600; color:#f3f4f6;">📋 ${p.name}</div>
+                            ${p.description ? `<div style="font-size:11px; color:#9ca3af; margin-top:2px;">${p.description}</div>` : ''}
+                            <div style="font-size:11px; color:#6b7280; margin-top:6px; word-break:break-all;">${settingsText}</div>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-shrink:0; margin-left:12px;">
+                            <button class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="openPolicyEditor('${toolKey}', JSON.parse('${pJson}'))">Edit</button>
+                            <button class="btn btn-secondary" style="padding:4px 10px; font-size:12px; color:#dc2626; border-color:#dc2626;" onclick="deletePolicy('${toolKey}', '${p.name.replace(/'/g, "\\'")}')">Del</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            body.innerHTML = `<div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; color:#9ca3af;">${policies.length} saved polic${policies.length === 1 ? 'y' : 'ies'}</span>
+                <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="openPolicyEditor('${toolKey}')">+ Create Policy</button>
+            </div>${cards}`;
+        }
+
+        function _renderPolicyField(f, settings) {
+            const val = settings[f.key] !== undefined ? settings[f.key] : (f.default !== undefined ? f.default : '');
+            if (f.type === 'toggle') {
+                const checked = val === 'true' || val === true;
+                return `<div class="form-group" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <div class="form-label" style="margin-bottom:0;">${_fieldLabel(f.key)}</div>
+                    <label class="toggle-switch"><input type="checkbox" id="pol-${f.key}" ${checked ? 'checked' : ''}><span class="toggle-slider"></span></label>
+                </div>`;
+            }
+            if (f.type === 'select') {
+                const opts = f.options.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('');
+                return `<div class="form-group">
+                    <div class="form-label">${_fieldLabel(f.key)}</div>
+                    <select class="form-select" id="pol-${f.key}">${opts}</select>
+                </div>`;
+            }
+            if (f.type === 'multicheck') {
+                const valArr = Array.isArray(val) ? val : (val || '').split(',').map(s => s.trim()).filter(Boolean);
+                const checks = f.options.map(o =>
+                    `<label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                        <input type="checkbox" id="pol-${f.key}-${o}" ${valArr.includes(o) ? 'checked' : ''} style="width:13px; height:13px; accent-color:#10b981;"> ${o}
+                    </label>`
+                ).join('');
+                return `<div class="form-group">
+                    <div class="form-label">${_fieldLabel(f.key)}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; padding:8px; background:#0f1419; border-radius:4px; border:1px solid #1f2937;">${checks}</div>
+                </div>`;
+            }
+            if (f.type === 'textarea' || f.type === 'taglist') {
+                const textVal = Array.isArray(val) ? val.join('\n') : val;
+                const hint = f.type === 'taglist' ? ' <span style="color:#6b7280;font-size:11px;">(one per line)</span>' : '';
+                return `<div class="form-group">
+                    <div class="form-label">${_fieldLabel(f.key)}${hint}</div>
+                    <textarea class="form-textarea" id="pol-${f.key}" style="min-height:60px;" placeholder="${f.placeholder || ''}">${textVal}</textarea>
+                </div>`;
+            }
+            return `<div class="form-group">
+                <div class="form-label">${_fieldLabel(f.key)}</div>
+                <input type="${f.type === 'number' ? 'number' : 'text'}" class="form-input" id="pol-${f.key}" value="${val}" placeholder="${f.default !== undefined ? f.default : ''}">
+            </div>`;
+        }
+
+        function openPolicyEditor(toolKey, policy) {
+            _editingPolicy = policy || null;
+            const fields  = POLICY_FIELDS[toolKey] || [];
+            const settings = policy?.settings || {};
+
+            const fieldHtml = fields.map(f => _renderPolicyField(f, settings)).join('') ||
+                '<p style="color:#9ca3af; font-size:13px;">No configurable policy fields for this tool.</p>';
+
+            document.getElementById('configPoliciesBody').innerHTML = `
+                <div class="form-group">
+                    <div class="form-label">Policy Name <span style="color:#dc2626">*</span></div>
+                    <input type="text" class="form-input" id="pol-name" value="${policy?.name || ''}" placeholder="e.g., Strict Production">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Description</div>
+                    <input type="text" class="form-input" id="pol-description" value="${policy?.description || ''}" placeholder="Optional description">
+                </div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#6b7280; margin:16px 0 12px; padding-bottom:6px; border-bottom:1px solid #1f2937;">Scan Settings</div>
+                ${fieldHtml}`;
+
+            document.getElementById('saveConfigBtn').style.display  = 'none';
+            document.getElementById('savePolicyBtn').style.display   = '';
+            document.getElementById('cancelPolicyBtn').style.display = '';
+        }
+
+        function backToPoliciesList() {
+            _editingPolicy = null;
+            document.getElementById('saveConfigBtn').style.display  = 'none';
+            document.getElementById('savePolicyBtn').style.display   = 'none';
+            document.getElementById('cancelPolicyBtn').style.display = 'none';
+            renderPoliciesList(_configToolKey, _cachedPolicies[_configToolKey] || []);
+        }
+
+        async function savePolicy() {
+            const name = document.getElementById('pol-name')?.value?.trim();
+            if (!name) { showToast('Policy name is required', 'error'); return; }
+
+            const toolKey = _configToolKey;
+            const fields  = POLICY_FIELDS[toolKey] || [];
+            const settings = {};
+
+            for (const f of fields) {
+                if (f.type === 'multicheck') {
+                    settings[f.key] = f.options.filter(o => document.getElementById(`pol-${f.key}-${o}`)?.checked);
+                } else if (f.type === 'toggle') {
+                    settings[f.key] = document.getElementById(`pol-${f.key}`)?.checked ? 'true' : 'false';
+                } else if (f.type === 'textarea' || f.type === 'taglist') {
+                    const raw = document.getElementById(`pol-${f.key}`)?.value || '';
+                    settings[f.key] = raw.split('\n').map(s => s.trim()).filter(Boolean);
+                } else {
+                    settings[f.key] = document.getElementById(`pol-${f.key}`)?.value || '';
+                }
+            }
+
+            const policy = {
+                name,
+                description: document.getElementById('pol-description')?.value?.trim() || '',
+                settings,
+            };
+
+            const btn     = document.getElementById('savePolicyBtn');
+            const spinner = document.getElementById('policySpinner');
+            btn.disabled = true; spinner.style.display = 'inline-block';
+
+            try {
+                const res = await fetch(`${state.apiEndpoint}/tools/policies/${toolKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ policy }),
+                });
+                const data = await res.json();
+                if (data.status === 'saved') {
+                    showToast(`Policy "${name}" saved`, 'success');
+                } else {
+                    showToast('Failed to save policy', 'error');
+                }
+            } catch (_) {
+                showToast('API unreachable — policy saved locally', 'warning');
+            } finally {
+                btn.disabled = false; spinner.style.display = 'none';
+            }
+
+            // Update local cache regardless
+            const cached = _cachedPolicies[toolKey] || [];
+            const idx = cached.findIndex(p => p.name === name);
+            if (idx >= 0) cached[idx] = policy; else cached.push(policy);
+            _cachedPolicies[toolKey] = cached;
+            _refreshPolicyPicker(toolKey);
+            backToPoliciesList();
+        }
+
+        async function deletePolicy(toolKey, name) {
+            if (!confirm(`Delete policy "${name}"?`)) return;
+            try {
+                await fetch(`${state.apiEndpoint}/tools/policies/${toolKey}/${encodeURIComponent(name)}`, { method: 'DELETE' });
+            } catch (_) {}
+            _cachedPolicies[toolKey] = (_cachedPolicies[toolKey] || []).filter(p => p.name !== name);
+            if (_activePolicies[toolKey] === name) delete _activePolicies[toolKey];
+            _refreshPolicyPicker(toolKey);
+            renderPoliciesList(toolKey, _cachedPolicies[toolKey]);
+            showToast(`Policy "${name}" deleted`, 'success');
+        }
+
+        // ────────────────────────────────────────────────────────────
+
+        async function runScan() {
+            const target = document.getElementById('scanTarget').value;
+            if (!target) {
+                showToast('Please enter a target', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('runScanBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span><span>Scanning...</span>';
+
+            try {
+                let endpoint, body;
+                if (state.selectedScanType === 'dast') {
+                    endpoint = `${state.apiEndpoint}/scan/zap`;
+                    body = { target, ...collectZAPOptions() };
+                } else if (state.selectedScanType === 'url') {
+                    endpoint = `${state.apiEndpoint}/scan/url`;
+                    body = { target, options: collectURLScanOptions() };
+                } else {
+                    endpoint = `${state.apiEndpoint}/scan/${state.selectedScanType}`;
+                    body = { target };
+                }
+
+                // Merge active policy settings into request
+                const toolKey = SCAN_TYPE_TOOL[state.selectedScanType];
+                if (toolKey && _activePolicies[toolKey]) {
+                    const policy = (_cachedPolicies[toolKey] || []).find(p => p.name === _activePolicies[toolKey]);
+                    if (policy?.settings) {
+                        if (state.selectedScanType === 'dast') {
+                            Object.assign(body, policy.settings);
+                        } else {
+                            body.options = Object.assign({}, body.options || {}, policy.settings);
+                        }
+                    }
+                }
+
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                state.scanResults = transformApiResult(data);
+                displayScanResults();
+                showToast(`Scan completed for ${target}`, 'success');
+            } catch (e) {
+                // Fallback to mock in offline mode
+                state.scanResults = generateMockScanResults();
+                displayScanResults();
+                showToast('API unreachable — showing mock results', 'warning');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>▶</span><span>Run Scan</span>';
+            }
+        }
+
+        function transformApiResult(data) {
+            // Normalise API response to the format displayScanResults() expects
+            const vulns = (data.vulnerabilities || []).map(v => ({
+                id: v.id,
+                title: v.description ? v.description.substring(0, 60) : v.id,
+                component: v.package || v.installed_version || '',
+                severity: v.severity || 'unknown',
+                cvss: v.cvss_score || 'N/A',
+                fixed: v.fixed_version || 'N/A',
+                urls: v.urls || [],
+            }));
+            const summary = data.summary || {};
+            return {
+                scanType: data.scan_type || state.selectedScanType,
+                target: data.target || '',
+                timestamp: data.started_at || new Date().toISOString(),
+                summary: {
+                    critical: summary.critical || 0,
+                    high: summary.high || 0,
+                    medium: summary.medium || 0,
+                    low: summary.low || 0,
+                    info: summary.info || 0,
+                },
+                vulnerabilities: vulns,
+                rawOutput: data.raw_output || JSON.stringify(data, null, 2),
+            };
+        }
+
+        function generateMockScanResults() {
+            return {
+                scanType: state.selectedScanType,
+                target: document.getElementById('scanTarget').value,
+                timestamp: new Date().toISOString(),
+                summary: {
+                    critical: 3,
+                    high: 8,
+                    medium: 15,
+                    low: 12
+                },
+                vulnerabilities: [
+                    { id: 'CVE-2024-1234', title: 'Critical RCE in OpenSSL', component: 'openssl', severity: 'critical', cvss: 9.8, fixed: 'openssl-3.0.14' },
+                    { id: 'CVE-2024-1235', title: 'SQL Injection in Node.js driver', component: 'mysql2', severity: 'high', cvss: 9.1, fixed: 'mysql2-3.2.0' },
+                    { id: 'CVE-2024-1236', title: 'Path Traversal in express', component: 'express', severity: 'high', cvss: 7.5, fixed: 'express-4.18.2' },
+                    { id: 'CVE-2024-1237', title: 'Information Disclosure', component: 'lodash', severity: 'medium', cvss: 5.3, fixed: 'lodash-4.17.21' },
+                    { id: 'CVE-2024-1238', title: 'Denial of Service', component: 'axios', severity: 'medium', cvss: 5.0, fixed: 'axios-1.6.5' }
+                ],
+                rawOutput: `Security Scanner Report
+======================
+Scan Type: ${state.selectedScanType}
+Target: ${document.getElementById('scanTarget').value}
+Timestamp: ${new Date().toISOString()}
+
+Summary:
+- Critical: 3
+- High: 8
+- Medium: 15
+- Low: 12
+- Total: 38
+
+Vulnerabilities found. See detailed report above.`
+            };
+        }
+
+        function displayScanResults() {
+            const resultsCard = document.getElementById('scanResultsCard');
+            const summaryCards = document.getElementById('scanSummaryCards');
+            const resultsBody = document.getElementById('scanResultsBody');
+
+            // Display summary cards
+            summaryCards.innerHTML = `
+                <div class="stat-card critical">
+                    <div class="stat-label">Critical</div>
+                    <div class="stat-value">${state.scanResults.summary.critical || 0}</div>
+                </div>
+                <div class="stat-card high">
+                    <div class="stat-label">High</div>
+                    <div class="stat-value">${state.scanResults.summary.high || 0}</div>
+                </div>
+                <div class="stat-card medium">
+                    <div class="stat-label">Medium</div>
+                    <div class="stat-value">${state.scanResults.summary.medium || 0}</div>
+                </div>
+                <div class="stat-card low">
+                    <div class="stat-label">Low</div>
+                    <div class="stat-value">${state.scanResults.summary.low || 0}</div>
+                </div>
+                ${state.scanResults.summary.info ? `<div class="stat-card">
+                    <div class="stat-label">Informational</div>
+                    <div class="stat-value">${state.scanResults.summary.info}</div>
+                </div>` : ''}
+            `;
+
+            // Display vulnerabilities
+            resultsBody.innerHTML = state.scanResults.vulnerabilities.map(vuln => `
+                <tr>
+                    <td><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #10b981;">${vuln.id}</code></td>
+                    <td>${vuln.title}</td>
+                    <td>${vuln.component}</td>
+                    <td><span class="severity-badge severity-${vuln.severity}">${vuln.severity}</span></td>
+                    <td>${vuln.cvss}</td>
+                    <td><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">${vuln.fixed}</code></td>
+                </tr>
+            `).join('');
+
+            // Display raw output
+            document.getElementById('rawOutput').textContent = state.scanResults.rawOutput;
+
+            resultsCard.style.display = 'block';
+        }
+
+        function runCloudScan() {
+            const btn = document.getElementById('runCloudScanBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span><span>Scanning...</span>';
+
+            setTimeout(() => {
+                const results = generateMockCloudResults();
+                displayCloudResults(results);
+                btn.disabled = false;
+                btn.innerHTML = '<span id="runCloudScanIcon">▶</span><span id="runCloudScanText">Start Cloud Scan</span>';
+                showToast('Cloud scan completed', 'success');
+            }, 2500);
+        }
+
+        function generateMockCloudResults() {
+            return {
+                passed: 145,
+                failed: 38,
+                complianceScore: 79,
+                findings: [
+                    { service: 'IAM', finding: 'Root account MFA not enabled', severity: 'critical', status: 'failed', remediation: 'Enable MFA on root account in AWS Console > Account Settings' },
+                    { service: 'S3', finding: 'Public read access on production bucket', severity: 'critical', status: 'failed', remediation: 'Remove public ACLs and update bucket policy' },
+                    { service: 'EC2', finding: 'Security group allows unrestricted SSH', severity: 'high', status: 'failed', remediation: 'Restrict SSH to specific IP ranges (0.0.0.0/0 not allowed)' },
+                    { service: 'RDS', finding: 'Backup retention less than 7 days', severity: 'high', status: 'failed', remediation: 'Set backup retention to minimum 7 days' },
+                    { service: 'VPC', finding: 'Flow logs not enabled', severity: 'medium', status: 'failed', remediation: 'Enable VPC Flow Logs for network monitoring' },
+                    { service: 'KMS', finding: 'Encryption enabled on databases', severity: 'low', status: 'passed', remediation: null }
+                ]
+            };
+        }
+
+        function displayCloudResults(results) {
+            document.getElementById('cloudPassed').textContent = results.passed;
+            document.getElementById('cloudFailed').textContent = results.failed;
+            document.getElementById('cloudComplianceScore').textContent = results.complianceScore + '%';
+
+            const resultsBody = document.getElementById('cloudResultsBody');
+            resultsBody.innerHTML = results.findings.map(finding => `
+                <tr>
+                    <td>${finding.service}</td>
+                    <td>${finding.finding}</td>
+                    <td><span class="severity-badge severity-${finding.severity}">${finding.severity}</span></td>
+                    <td><span class="status-badge ${finding.status === 'passed' ? 'status-success' : 'status-failed'}">${finding.status}</span></td>
+                    <td>
+                        ${finding.remediation ? `
+                            <button class="expand-btn" onclick="toggleExpandable(this)">Show</button>
+                            <div class="expand-content" style="display: none;">${finding.remediation}</div>
+                        ` : '-'}
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('cloudResultsCard').style.display = 'block';
+        }
+
+        function searchLogs() {
+            const btn = document.getElementById('searchLogsBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span><span>Searching...</span>';
+
+            setTimeout(() => {
+                const results = generateMockLogs(20);
+                displayLogs(results);
+                updateLogStats(results);
+                btn.disabled = false;
+                btn.innerHTML = '<span id="searchLogsBtnIcon">🔍</span><span>Search Logs</span>';
+                showToast('Found ' + results.length + ' logs', 'success');
+            }, 1500);
+        }
+
+        function generateMockLogs(count) {
+            const sources = ['CloudTrail', 'S3', 'VPC Flow Logs', 'Application'];
+            const severities = ['critical', 'high', 'medium', 'low', 'info'];
+            const actors = ['root', 'service-account', 'admin@company.com', 'lambda-function', 'ec2-instance'];
+            const actions = ['DeleteBucket', 'CreateAccessKey', 'ModifySecurityGroup', 'PutBucketPolicy', 'AuthorizeSecurityGroupIngress'];
+            const targets = ['s3://prod-bucket', 'sg-12345678', 'arn:aws:iam::123456:user/admin', 'database-prod', 'api-gateway'];
+            const ips = ['203.0.113.42', '198.51.100.89', '192.0.2.55', '203.0.113.128', 'N/A'];
+
+            const logs = [];
+            for (let i = 0; i < count; i++) {
+                logs.push({
+                    timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+                    source: sources[Math.floor(Math.random() * sources.length)],
+                    severity: severities[Math.floor(Math.random() * severities.length)],
+                    actor: actors[Math.floor(Math.random() * actors.length)],
+                    action: actions[Math.floor(Math.random() * actions.length)],
+                    target: targets[Math.floor(Math.random() * targets.length)],
+                    sourceIp: ips[Math.floor(Math.random() * ips.length)],
+                    details: JSON.stringify({ region: 'us-east-1', status: 'success', duration: Math.floor(Math.random() * 1000) + 'ms' })
+                });
+            }
+            return logs;
+        }
+
+        function displayLogs(logs) {
+            const logsBody = document.getElementById('logsTableBody');
+            logsBody.innerHTML = logs.map((log, idx) => `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.source}</td>
+                    <td><span class="severity-badge severity-${log.severity}">${log.severity}</span></td>
+                    <td>${log.actor}</td>
+                    <td>${log.action}</td>
+                    <td>${log.target}</td>
+                    <td>${log.sourceIp}</td>
+                    <td>
+                        <button class="expand-btn" onclick="toggleExpandable(this)">JSON</button>
+                        <div class="expand-content" style="display: none;">
+                            <pre style="font-size: 11px; overflow-x: auto;">${log.details}</pre>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateLogStats(logs) {
+            document.getElementById('statsLogCount').textContent = logs.length.toLocaleString();
+
+            // Calculate severity distribution
+            const severityCount = {};
+            logs.forEach(log => {
+                severityCount[log.severity] = (severityCount[log.severity] || 0) + 1;
+            });
+
+            const severityBar = document.getElementById('severityBar');
+            severityBar.innerHTML = Object.entries(severityCount).map(([severity, count]) =>
+                `<div class="mini-bar-segment ${severity}" style="flex: ${count};" title="${severity}: ${count}"></div>`
+            ).join('');
+
+            // Top actors
+            const actorCount = {};
+            logs.forEach(log => {
+                actorCount[log.actor] = (actorCount[log.actor] || 0) + 1;
+            });
+            const topActors = Object.entries(actorCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            document.getElementById('topActors').innerHTML = topActors.map(([actor, count]) =>
+                `<div style="padding: 4px 0;">${actor} <span style="color: #6b7280;">(${count})</span></div>`
+            ).join('') || '<div style="padding: 8px 0; color: #6b7280;">None</div>';
+
+            // Top actions
+            const actionCount = {};
+            logs.forEach(log => {
+                actionCount[log.action] = (actionCount[log.action] || 0) + 1;
+            });
+            const topActions = Object.entries(actionCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            document.getElementById('topActions').innerHTML = topActions.map(([action, count]) =>
+                `<div style="padding: 4px 0;">${action} <span style="color: #6b7280;">(${count})</span></div>`
+            ).join('') || '<div style="padding: 8px 0; color: #6b7280;">None</div>';
+        }
+
+        function openIngestModal() {
+            document.getElementById('ingestLogsModal').classList.add('active');
+        }
+
+        // ── Investigation / Correlation ───────────────────────────
+
+        const SEV_COLOR = { critical:'#dc2626', high:'#ea580c', medium:'#eab308', low:'#10b981', info:'#3b82f6', completed:'#10b981', failed:'#dc2626', running:'#eab308' };
+        const KIND_ICON  = { log:'📋', scan:'🔍', cloud_finding:'☁️' };
+
+        function _sevBadge(s) {
+            const col = SEV_COLOR[s] || '#6b7280';
+            return `<span style="font-size:11px; font-weight:600; color:${col}; text-transform:uppercase;">${s||'?'}</span>`;
+        }
+
+        function _showInvestigateResults(title, html) {
+            document.getElementById('investigateResultsTitle').textContent = title;
+            document.getElementById('investigateResultsBody').innerHTML = html;
+            const el = document.getElementById('investigateResults');
+            el.style.display = '';
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function _investigateError(label, err) {
+            _showInvestigateResults(label, `<div style="color:#dc2626; font-size:13px; padding:12px;">⚠️ ${err}</div>`);
+        }
+
+        async function runInvestigateTimeline() {
+            const hours = document.getElementById('timelineHours').value;
+            _showInvestigateResults(`📅 Timeline — loading last ${hours}h…`, '<div style="color:#6b7280; padding:12px;">Fetching…</div>');
+            try {
+                const res  = await fetch(`${state.apiEndpoint}/investigate/timeline?hours=${hours}`);
+                const data = await res.json();
+                if (data.error) { _investigateError('Timeline', data.error); return; }
+                const events = data.events || [];
+                if (!events.length) {
+                    _showInvestigateResults(`📅 Timeline (${hours}h) — 0 events`, '<div style="color:#6b7280; padding:12px;">No events in this window.</div>');
+                    return;
+                }
+                const rows = events.map(e => `
+                    <tr>
+                        <td style="font-size:11px; font-family:monospace; white-space:nowrap;">${(e.ts||'').slice(0,19)}</td>
+                        <td>${KIND_ICON[e.kind]||''} <span style="font-size:11px; color:#9ca3af;">${e.kind||''}</span></td>
+                        <td>${_sevBadge(e.severity)}</td>
+                        <td style="font-size:12px;">${e.actor||'—'}</td>
+                        <td style="font-size:12px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${e.action||''}">${e.action||'—'}</td>
+                        <td style="font-size:11px; color:#9ca3af; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${e.target||''}">${e.target||e.detail||'—'}</td>
+                        <td style="font-size:11px; font-family:monospace;">${e.source_ip||'—'}</td>
+                    </tr>`).join('');
+                _showInvestigateResults(`📅 Timeline — ${events.length} events (last ${hours}h)`,
+                    `<div class="table-wrapper"><table><thead><tr><th>Time</th><th>Kind</th><th>Severity</th><th>Actor</th><th>Action</th><th>Target / Detail</th><th>Source IP</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+            } catch (e) { _investigateError('Timeline', e.message); }
+        }
+
+        async function runInvestigateIP() {
+            const ip = document.getElementById('investigateIP').value.trim();
+            if (!ip) { showToast('Enter an IP address', 'error'); return; }
+            _showInvestigateResults(`🌐 IP: ${ip} — loading…`, '<div style="color:#6b7280; padding:12px;">Fetching…</div>');
+            try {
+                const res  = await fetch(`${state.apiEndpoint}/investigate/ip/${encodeURIComponent(ip)}`);
+                const data = await res.json();
+                if (data.error) { _investigateError(`IP: ${ip}`, data.error); return; }
+                const events = data.events || [];
+
+                const statsHtml = `
+                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px;">
+                        <div style="padding:10px; background:#0f1419; border-radius:6px; border:1px solid #1f2937;">
+                            <div style="font-size:11px; color:#6b7280;">Total Events</div>
+                            <div style="font-size:20px; font-weight:700; color:#f3f4f6;">${data.total_events||0}</div>
+                        </div>
+                        <div style="padding:10px; background:#0f1419; border-radius:6px; border:1px solid #1f2937;">
+                            <div style="font-size:11px; color:#6b7280;">First Seen</div>
+                            <div style="font-size:12px; font-family:monospace; color:#d1d5db;">${(data.first_seen||'N/A').slice(0,19)}</div>
+                        </div>
+                        <div style="padding:10px; background:#0f1419; border-radius:6px; border:1px solid #1f2937;">
+                            <div style="font-size:11px; color:#6b7280;">Last Seen</div>
+                            <div style="font-size:12px; font-family:monospace; color:#d1d5db;">${(data.last_seen||'N/A').slice(0,19)}</div>
+                        </div>
+                        <div style="padding:10px; background:#0f1419; border-radius:6px; border:1px solid #1f2937;">
+                            <div style="font-size:11px; color:#6b7280;">Severity Breakdown</div>
+                            <div style="font-size:11px;">${Object.entries(data.severity_distribution||{}).map(([k,v])=>`${_sevBadge(k)} ${v}`).join('  ')}</div>
+                        </div>
+                    </div>
+                    ${data.top_actions?.length ? `
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#6b7280; margin-bottom:8px;">Top Actions</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            ${data.top_actions.map(a=>`<span style="padding:3px 8px; background:#1f2937; border-radius:4px; font-size:11px;">${a.action} <b style="color:#10b981;">${a.count}</b></span>`).join('')}
+                        </div>
+                    </div>` : ''}`;
+
+                const rows = events.map(e => `
+                    <tr>
+                        <td style="font-size:11px; font-family:monospace; white-space:nowrap;">${(e.ts||'').slice(0,19)}</td>
+                        <td style="font-size:12px;">${e.source||'—'}</td>
+                        <td>${_sevBadge(e.severity)}</td>
+                        <td style="font-size:12px;">${e.actor||'—'}</td>
+                        <td style="font-size:12px;">${e.action||'—'}</td>
+                        <td style="font-size:11px; color:#9ca3af;">${e.target_resource||'—'}</td>
+                        <td style="font-size:11px; color:#9ca3af;">${e.event_type||'—'}</td>
+                    </tr>`).join('');
+
+                _showInvestigateResults(`🌐 IP Profile: ${ip}`, statsHtml +
+                    `<div class="table-wrapper"><table><thead><tr><th>Time</th><th>Source</th><th>Severity</th><th>Actor</th><th>Action</th><th>Target</th><th>Type</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+            } catch (e) { _investigateError(`IP: ${ip}`, e.message); }
+        }
+
+        async function runInvestigatePkg() {
+            const pkg = document.getElementById('investigatePkg').value.trim();
+            if (!pkg) { showToast('Enter a package name or CVE ID', 'error'); return; }
+            _showInvestigateResults(`📦 ${pkg} — loading…`, '<div style="color:#6b7280; padding:12px;">Fetching…</div>');
+            try {
+                // detect CVE vs package
+                const isCVE = /^CVE-/i.test(pkg);
+                const url = isCVE
+                    ? `${state.apiEndpoint}/investigate/vuln/${encodeURIComponent(pkg)}`
+                    : `${state.apiEndpoint}/investigate/package/${encodeURIComponent(pkg)}`;
+                const res  = await fetch(url);
+                const data = await res.json();
+                if (data.error) { _investigateError(pkg, data.error); return; }
+
+                if (isCVE) {
+                    // CVE view
+                    const hits = data.scan_hits || [];
+                    const cloud = data.cloud_findings || [];
+                    const hitRows = hits.map(h=>`<tr>
+                        <td style="font-size:12px; font-family:monospace;">${h.vuln_id}</td>
+                        <td>${_sevBadge(h.severity)}</td>
+                        <td style="font-size:12px;">${h.package}@${h.installed_version}</td>
+                        <td style="font-size:12px; color:#10b981;">${h.fixed_version||'—'}</td>
+                        <td style="font-size:11px; color:#9ca3af;">${h.target}</td>
+                        <td style="font-size:11px; font-family:monospace;">${(h.discovered_at||'').slice(0,19)}</td>
+                    </tr>`).join('');
+                    const cloudRows = cloud.map(c=>`<tr>
+                        <td style="font-size:12px;">${c.check_id}</td>
+                        <td>${_sevBadge(c.severity)}</td>
+                        <td style="font-size:12px;">${c.service}</td>
+                        <td style="font-size:11px; color:#9ca3af; font-family:monospace;">${c.resource_arn}</td>
+                        <td>${_sevBadge(c.status?.toLowerCase())}</td>
+                    </tr>`).join('');
+                    _showInvestigateResults(`🔍 CVE: ${pkg} — ${hits.length} scan hits, ${cloud.length} cloud findings`,
+                        (hitRows ? `<div style="font-size:12px; font-weight:600; color:#9ca3af; margin-bottom:8px;">Scan Hits</div><div class="table-wrapper"><table><thead><tr><th>CVE</th><th>Severity</th><th>Package</th><th>Fixed In</th><th>Target</th><th>Found</th></tr></thead><tbody>${hitRows}</tbody></table></div>` : '') +
+                        (cloudRows ? `<div style="font-size:12px; font-weight:600; color:#9ca3af; margin:12px 0 8px;">Cloud Findings</div><div class="table-wrapper"><table><thead><tr><th>Check ID</th><th>Severity</th><th>Service</th><th>Resource</th><th>Status</th></tr></thead><tbody>${cloudRows}</tbody></table></div>` : ''));
+                } else {
+                    // Package view
+                    const sbom = data.sbom_occurrences || [];
+                    const vulns = data.vulnerabilities || [];
+                    const logs = data.related_logs || [];
+                    const sevSummary = data.cve_severity_summary || {};
+                    const sbomRows = sbom.map(s=>`<tr>
+                        <td style="font-size:12px;">${s.name}</td>
+                        <td style="font-size:12px; font-family:monospace;">${s.version}</td>
+                        <td style="font-size:11px; color:#9ca3af;">${s.target}</td>
+                        <td style="font-size:11px;">${s.scan_type}</td>
+                        <td style="font-size:11px; font-family:monospace;">${(s.scan_time||'').slice(0,19)}</td>
+                    </tr>`).join('');
+                    const vulnRows = vulns.map(v=>`<tr>
+                        <td style="font-size:12px; font-family:monospace;">${v.vuln_id}</td>
+                        <td>${_sevBadge(v.severity)}</td>
+                        <td style="font-size:11px; font-family:monospace;">${v.installed_version} → <span style="color:#10b981;">${v.fixed_version||'no fix'}</span></td>
+                        <td style="font-size:11px;">${v.cvss_score??'—'}</td>
+                        <td style="font-size:11px; color:#9ca3af;">${v.scan_target}</td>
+                    </tr>`).join('');
+                    const sevLine = Object.entries(sevSummary).map(([k,v])=>`${_sevBadge(k)} ×${v}`).join('  ');
+                    _showInvestigateResults(`📦 Package: ${pkg} — ${sbom.length} SBOM hits, ${vulns.length} CVEs`,
+                        `<div style="margin-bottom:12px; font-size:12px;">CVE breakdown: ${sevLine||'none'}</div>` +
+                        (sbomRows ? `<div style="font-size:12px; font-weight:600; color:#9ca3af; margin-bottom:8px;">SBOM Occurrences</div><div class="table-wrapper"><table><thead><tr><th>Name</th><th>Version</th><th>Target</th><th>Scan Type</th><th>Scan Time</th></tr></thead><tbody>${sbomRows}</tbody></table></div>` : '') +
+                        (vulnRows ? `<div style="font-size:12px; font-weight:600; color:#9ca3af; margin:12px 0 8px;">Known CVEs</div><div class="table-wrapper"><table><thead><tr><th>CVE</th><th>Severity</th><th>Version</th><th>CVSS</th><th>Scan Target</th></tr></thead><tbody>${vulnRows}</tbody></table></div>` : '') +
+                        (logs.length ? `<div style="font-size:12px; font-weight:600; color:#9ca3af; margin:12px 0 8px;">Related Logs (${logs.length})</div><div style="font-size:11px; color:#6b7280;">${logs.map(l=>`<div style="padding:4px 0; border-bottom:1px solid #1f2937;">${(l.ts||'').slice(0,19)} · ${l.action} · ${l.actor||'—'}</div>`).join('')}</div>` : ''));
+                }
+            } catch (e) { _investigateError(pkg, e.message); }
+        }
+
+        // ─────────────────────────────────────────────────────────
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ── Tools loaded from API registry ───────────────────────
+        async function loadToolsFromRegistry() {
+            try {
+                const res = await fetch(`${state.apiEndpoint}/tools/registry`);
+                const data = await res.json();
+                const rawTools = data.tools || {};
+                // Merge registry data (install_methods, config_fields, description) into JS tools array
+                tools = tools.map(t => {
+                    const reg = rawTools[t.key];
+                    if (!reg) return t;
+                    return {
+                        ...t,
+                        description: reg.description || t.description,
+                        install_methods: reg.install_methods || t.install_methods,
+                        config_fields: reg.config_fields || t.config_fields,
+                        docs: reg.docs || t.docs,
+                    };
+                });
+            } catch (_) {
+                // Use hardcoded fallback — server may not be running
+            }
+            renderToolsGrid();
+            renderTierButtons();
+        }
+
+        // ── Tier buttons ─────────────────────────────────────────
+        function renderTierButtons() {
+            const grid = document.getElementById('tierButtonsGrid');
+            if (!grid) return;
+            const icons = { starter:'⚡', scanner:'🔍', cloud:'☁️', dast:'🌐', full:'🛡️', custom:'⚙️' };
+            grid.innerHTML = Object.entries(TIERS).map(([key, tier]) => `
+                <button class="btn btn-secondary tier-btn" id="tier-btn-${key}" onclick="selectTier('${key}')"
+                    title="${tier.description}" style="justify-content:flex-start; gap:6px; text-align:left;">
+                    <span>${icons[key] || '•'}</span>
+                    <span style="font-size:12px;">${tier.name}</span>
+                </button>
+            `).join('');
+        }
+
+        function renderToolsGrid() {
+            const grid = document.getElementById('toolsGrid');
+            grid.innerHTML = tools.map(tool => {
+                const sel = selectedTools.has(tool.key);
+                return `
+                <div class="tool-card${sel ? ' selected' : ''}" id="tool-card-${tool.key}">
+                    <input type="checkbox" class="tool-select-cb" id="cb-${tool.key}"
+                        ${sel ? 'checked' : ''} onchange="toggleToolSelect('${tool.key}', this.checked)"
+                        title="Select for batch install">
+                    <div class="tool-card-header" style="padding-right:28px;">
+                        <div>
+                            <div class="tool-category-badge">${tool.category.toUpperCase()}</div>
+                            <div class="tool-name">${tool.name}</div>
+                        </div>
+                        <div class="tool-badge ${tool.installed ? 'installed' : 'not-installed'}" id="tool-badge-${tool.key}">
+                            <span>${tool.installed ? '✓' : '○'}</span>
+                            <span id="tool-status-${tool.key}">${tool.installed ? 'Installed' : 'Not installed'}</span>
+                        </div>
+                    </div>
+                    <div class="tool-description">${tool.description}</div>
+                    <div class="tool-version" id="tool-version-${tool.key}" style="font-size:11px; color:#6b7280; font-family:'JetBrains Mono',monospace;">${tool.version || ''}</div>
+                    <div class="tool-card-actions">
+                        <button class="btn btn-primary btn-small" onclick="openInstallModal('${tool.key}')">
+                            📦 Install
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="openConfigModal('${tool.key}')">
+                            ⚙️ Configure
+                        </button>
+                        <a href="${tool.docs}" target="_blank" rel="noopener" class="btn btn-secondary btn-small" style="text-decoration:none;">
+                            📖 Docs
+                        </a>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ── Tool selection helpers ───────────────────────────────
+        function toggleToolSelect(key, checked) {
+            if (checked) selectedTools.add(key); else selectedTools.delete(key);
+            const card = document.getElementById(`tool-card-${key}`);
+            if (card) card.classList.toggle('selected', checked);
+            updateBatchBar();
+        }
+
+        function selectAllTools() {
+            tools.forEach(t => {
+                selectedTools.add(t.key);
+                const cb = document.getElementById(`cb-${t.key}`);
+                if (cb) cb.checked = true;
+                const card = document.getElementById(`tool-card-${t.key}`);
+                if (card) card.classList.add('selected');
+            });
+            updateBatchBar();
+        }
+
+        function clearSelection() {
+            selectedTools.clear();
+            tools.forEach(t => {
+                const cb = document.getElementById(`cb-${t.key}`);
+                if (cb) cb.checked = false;
+                const card = document.getElementById(`tool-card-${t.key}`);
+                if (card) card.classList.remove('selected');
+            });
+            updateBatchBar();
+        }
+
+        function updateBatchBar() {
+            const bar = document.getElementById('batchInstallBar');
+            const countEl = document.getElementById('selectedCount');
+            if (selectedTools.size > 0) {
+                bar.style.display = 'flex';
+                countEl.textContent = selectedTools.size;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function selectTier(tierKey) {
+            const tier = TIERS[tierKey];
+            if (!tier) return;
+            // Highlight active tier button
+            document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('tier-active'));
+            const btn = document.getElementById(`tier-btn-${tierKey}`);
+            if (btn) btn.classList.add('tier-active');
+
+            if (tierKey === 'custom') {
+                showToast('Custom mode: tick the checkboxes on the tools you want to install.', 'info');
+                return;
+            }
+            // Select exactly the tools in this tier
+            clearSelection();
+            tier.tools.forEach(key => {
+                selectedTools.add(key);
+                const cb = document.getElementById(`cb-${key}`);
+                if (cb) cb.checked = true;
+                const card = document.getElementById(`tool-card-${key}`);
+                if (card) card.classList.add('selected');
+            });
+            updateBatchBar();
+            showToast(`${tier.name} selected — ${tier.tools.length} tools. Click "Install Selected" to proceed.`, 'info');
+        }
+
+        // ── Check All Tools ──────────────────────────────────────
+        function checkAllTools() {
+            const btn = document.getElementById('checkAllToolsBtn');
+            const spinner = document.getElementById('checkToolsSpinner');
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            fetch(`${state.apiEndpoint}/tools/status`)
+                .then(r => r.json())
+                .then(data => {
+                    (data.tools || []).forEach(t => {
+                        const key = t.name.toLowerCase();
+                        // Update badge
+                        const badge = document.getElementById(`tool-badge-${key}`);
+                        if (badge) {
+                            badge.className = `tool-badge ${t.installed ? 'installed' : 'not-installed'}`;
+                            badge.querySelector('span').textContent = t.installed ? '✓' : '○';
+                        }
+                        // Update status text
+                        const statusEl = document.getElementById(`tool-status-${key}`);
+                        if (statusEl) statusEl.textContent = t.installed ? 'Installed' : 'Not installed';
+                        // Update version
+                        const verEl = document.getElementById(`tool-version-${key}`);
+                        if (verEl && t.version) verEl.textContent = t.version;
+                        // Reflect in local tools array
+                        const tool = tools.find(x => x.key === key);
+                        if (tool) { tool.installed = t.installed; tool.version = t.version || tool.version; }
+                    });
+                    showToast(`Checked ${data.tools.length} tools`, 'success');
+                })
+                .catch(() => showToast('API not reachable — showing cached status', 'warning'))
+                .finally(() => { btn.disabled = false; spinner.style.display = 'none'; });
+        }
+
+        // ── Single-tool Install Modal ────────────────────────────
+        let _installToolKey = '';
+        let _installMethod  = 'default';
+
+        function openInstallModal(toolKey) {
+            _installToolKey = toolKey;
+            const tool = tools.find(t => t.key === toolKey);
+            if (!tool) return;
+
+            _installMethod = tool.install_methods?.[0]?.id || 'default';
+            document.getElementById('installModalTitle').textContent = `Install ${tool.name}`;
+
+            // Build method selector dynamically from tool.install_methods
+            const selector = document.getElementById('installMethodSelector');
+            selector.innerHTML = (tool.install_methods || []).map((m, i) => `
+                <button class="provider-btn${i === 0 ? ' active' : ''}"
+                    data-install-method="${m.id}"
+                    onclick="selectInstallMethod('${m.id}')">
+                    ${m.icon} ${m.label}
+                </button>`).join('');
+
+            document.getElementById('installLogGroup').style.display = 'none';
+            document.getElementById('installLogOutput').textContent = '';
+            updateInstallCommandPreview();
+            document.getElementById('toolInstallModal').classList.add('active');
+        }
+
+        function selectInstallMethod(method) {
+            _installMethod = method;
+            document.querySelectorAll('#installMethodSelector .provider-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-install-method') === method);
+            });
+            updateInstallCommandPreview();
+        }
+
+        function updateInstallCommandPreview() {
+            const tool = tools.find(t => t.key === _installToolKey);
+            const methods = tool?.install_methods || [];
+            const m = methods.find(x => x.id === _installMethod) || methods[0];
+            document.getElementById('installCommandPreview').textContent = m?.cmd || 'No install command available.';
+        }
+
+        async function runToolInstall() {
+            await _doInstall(_installToolKey, _installMethod, {
+                logEl: document.getElementById('installLogOutput'),
+                logGroup: document.getElementById('installLogGroup'),
+                btn: document.getElementById('runInstallBtn'),
+                spinner: document.getElementById('installSpinner'),
+                btnTextEl: document.getElementById('runInstallBtnText'),
+                afterSuccess: () => {
+                    checkAllTools();
+                    const tool = tools.find(t => t.key === _installToolKey);
+                    if (tool?.config_fields?.length) {
+                        showToast(`${tool.name} installed — click Configure to set credentials.`, 'info');
+                    }
+                },
+            });
+        }
+
+        async function _doInstall(toolKey, method, { logEl, logGroup, btn, spinner, btnTextEl, afterSuccess }) {
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.style.display = 'inline-block';
+            if (btnTextEl) btnTextEl.textContent = 'Installing…';
+            if (logGroup) logGroup.style.display = 'block';
+            if (logEl) logEl.textContent = 'Running install command…\n';
+
+            try {
+                const res = await fetch(`${state.apiEndpoint}/tools/install/${toolKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method }),
+                });
+                const data = await res.json();
+                if (logEl) {
+                    logEl.textContent = `$ ${data.command}\n\n`;
+                    if (data.stdout) logEl.textContent += data.stdout;
+                    if (data.stderr) logEl.textContent += `\nSTDERR: ${data.stderr}`;
+                    logEl.textContent += `\n\n→ ${data.status.toUpperCase()}`;
+                    logEl.scrollTop = logEl.scrollHeight;
+                }
+                if (data.status === 'success') {
+                    if (afterSuccess) afterSuccess();
+                    return true;
+                } else {
+                    showToast(`Install ${data.status}: ${toolKey}`, data.status === 'failed' ? 'error' : 'warning');
+                    return false;
+                }
+            } catch (e) {
+                if (logEl) logEl.textContent += `\nAPI error: ${e.message}`;
+                showToast('Could not reach ShieldKit API', 'error');
+                return false;
+            } finally {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (btnTextEl) btnTextEl.textContent = 'Run Install';
+            }
+        }
+
+        // ── Batch Install Modal ──────────────────────────────────
+        function openBatchInstallModal() {
+            if (selectedTools.size === 0) {
+                showToast('No tools selected', 'warning');
+                return;
+            }
+            const selected = tools.filter(t => selectedTools.has(t.key));
+            const list = document.getElementById('batchInstallList');
+            list.innerHTML = selected.map(tool => {
+                const defaultMethod = tool.install_methods?.[0]?.id || 'default';
+                const methodOptions = (tool.install_methods || []).map(m =>
+                    `<option value="${m.id}">${m.icon} ${m.label}</option>`).join('');
+                return `
+                <div class="batch-row" id="batch-row-${tool.key}">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                            <div class="tool-category-badge">${tool.category.toUpperCase()}</div>
+                            <strong style="color:#f3f4f6;">${tool.name}</strong>
+                            <span class="batch-row-status batch-status-pending" id="batch-status-${tool.key}">Pending</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="form-label" style="margin:0; white-space:nowrap;">Method:</div>
+                            <select class="form-select" id="batch-method-${tool.key}" style="flex:1; max-width:220px;">
+                                ${methodOptions}
+                            </select>
+                        </div>
+                        <div class="install-log" id="batch-log-${tool.key}"
+                            style="display:none; margin-top:8px; max-height:100px;"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                        ${tool.config_fields?.length ? `
+                        <button class="btn btn-secondary btn-small" id="batch-cfg-${tool.key}"
+                            style="display:none;" onclick="openConfigModal('${tool.key}')">
+                            ⚙️ Configure
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('batchInstallModal').classList.add('active');
+        }
+
+        async function startBatchInstall() {
+            const startBtn = document.getElementById('batchStartBtn');
+            const spinner  = document.getElementById('batchSpinner');
+            const cancelBtn = document.getElementById('batchCancelBtn');
+            const btnText  = document.getElementById('batchStartBtnText');
+
+            startBtn.disabled = true;
+            cancelBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Installing…';
+
+            const selected = tools.filter(t => selectedTools.has(t.key));
+            let successCount = 0;
+
+            for (const tool of selected) {
+                const method = document.getElementById(`batch-method-${tool.key}`)?.value || 'default';
+                const statusEl = document.getElementById(`batch-status-${tool.key}`);
+                const logEl    = document.getElementById(`batch-log-${tool.key}`);
+                const cfgBtn   = document.getElementById(`batch-cfg-${tool.key}`);
+
+                if (statusEl) { statusEl.textContent = 'Installing…'; statusEl.className = 'batch-row-status batch-status-running'; }
+                if (logEl) logEl.style.display = 'block';
+
+                const ok = await _doInstall(tool.key, method, { logEl });
+
+                if (statusEl) {
+                    statusEl.textContent = ok ? '✓ Done' : '✗ Failed';
+                    statusEl.className = `batch-row-status ${ok ? 'batch-status-done' : 'batch-status-failed'}`;
+                }
+                if (ok) {
+                    successCount++;
+                    if (cfgBtn) cfgBtn.style.display = 'inline-flex';
+                }
+            }
+
+            startBtn.disabled = false;
+            cancelBtn.disabled = false;
+            spinner.style.display = 'none';
+            btnText.textContent = 'Done';
+            showToast(`Installed ${successCount}/${selected.length} tools successfully`, successCount === selected.length ? 'success' : 'warning');
+            checkAllTools();
+        }
+
+        // ── Configure Modal ──────────────────────────────────────
+        let _configToolKey = '';
+
+        function _renderField(field, savedValue) {
+            const val = savedValue !== undefined ? savedValue : (field.default || '');
+            if (field.type === 'toggle') {
+                const checked = val === 'true' || val === true;
+                return `
+                    <div class="form-group">
+                        <div class="toggle-row">
+                            <div>
+                                <div class="form-label" style="margin-bottom:2px;">${field.label}</div>
+                                <div class="field-help">${field.help || ''}</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="cfg-${field.key}" ${checked ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>`;
+            }
+            if (field.type === 'select') {
+                const opts = (field.options || []).map(o =>
+                    `<option value="${o}" ${o === val ? 'selected' : ''}>${o || '— none —'}</option>`).join('');
+                return `
+                    <div class="form-group">
+                        <div class="form-label">${field.label}${field.required ? ' <span style="color:#dc2626">*</span>' : ''}</div>
+                        <select class="form-select" id="cfg-${field.key}">${opts}</select>
+                        ${field.help ? `<div class="field-help">${field.help}</div>` : ''}
+                    </div>`;
+            }
+            return `
+                <div class="form-group">
+                    <div class="form-label">${field.label}${field.required ? ' <span style="color:#dc2626">*</span>' : ''}</div>
+                    <input type="${field.type === 'password' ? 'password' : field.type === 'number' ? 'number' : 'text'}"
+                        class="form-input" id="cfg-${field.key}"
+                        value="${val}" placeholder="${field.default || ''}">
+                    ${field.help ? `<div class="field-help">${field.help}</div>` : ''}
+                </div>`;
+        }
+
+        async function openConfigModal(toolKey) {
+            _configToolKey = toolKey;
+            const tool = tools.find(t => t.key === toolKey);
+            if (!tool) return;
+            document.getElementById('configModalTitle').textContent = `Configure ${tool.name}`;
+
+            let savedConfig = {};
+            try {
+                const res = await fetch(`${state.apiEndpoint}/tools/config/${toolKey}`);
+                savedConfig = (await res.json()).config || {};
+            } catch (_) {
+                // Try localStorage fallback
+                try { savedConfig = JSON.parse(localStorage.getItem(`shieldkit_cfg_${toolKey}`) || '{}'); } catch (_) {}
+            }
+
+            const body = document.getElementById('configModalBody');
+            if (!tool.config_fields?.length) {
+                body.innerHTML = '<p style="color:#9ca3af; font-size:13px;">This tool has no configurable options.</p>';
+            } else {
+                // Group fields by logical sections (detect by key prefix)
+                const aws   = tool.config_fields.filter(f => f.key.startsWith('AWS_'));
+                const azure = tool.config_fields.filter(f => f.key.startsWith('AZURE_'));
+                const gcp   = tool.config_fields.filter(f => f.key.startsWith('GCP_') || f.key.startsWith('GOOGLE_'));
+                const other = tool.config_fields.filter(f => !f.key.startsWith('AWS_') && !f.key.startsWith('AZURE_') && !f.key.startsWith('GCP_') && !f.key.startsWith('GOOGLE_'));
+
+                const section = (title, fields) => fields.length === 0 ? '' : `
+                    <div style="margin-bottom:20px;">
+                        ${title ? `<div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#6b7280; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid #1f2937;">${title}</div>` : ''}
+                        ${fields.map(f => _renderField(f, savedConfig[f.key])).join('')}
+                    </div>`;
+
+                body.innerHTML =
+                    section('', other) +
+                    section('AWS', aws) +
+                    section('Azure', azure) +
+                    section('GCP', gcp);
+            }
+
+            // Load policies in background, initialize to Settings tab
+            loadPoliciesForTool(toolKey);
+            switchConfigTab('settings');
+            document.getElementById('toolConfigModal').classList.add('active');
+        }
+
+        async function saveToolConfig() {
+            const tool = tools.find(t => t.key === _configToolKey);
+            if (!tool) return;
+            const btn    = document.getElementById('saveConfigBtn');
+            const spinner = document.getElementById('configSpinner');
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            const config = {};
+            (tool.config_fields || []).forEach(field => {
+                const el = document.getElementById(`cfg-${field.key}`);
+                if (!el) return;
+                config[field.key] = field.type === 'toggle' ? (el.checked ? 'true' : 'false') : el.value;
+            });
+
+            try {
+                const res = await fetch(`${state.apiEndpoint}/tools/config/${_configToolKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ config }),
+                });
+                const data = await res.json();
+                if (data.status === 'saved') {
+                    showToast(`${tool.name} configuration saved`, 'success');
+                    localStorage.setItem(`shieldkit_cfg_${_configToolKey}`, JSON.stringify(config));
+                    closeModal('toolConfigModal');
+                } else {
+                    showToast('Failed to save configuration', 'error');
+                }
+            } catch (e) {
+                localStorage.setItem(`shieldkit_cfg_${_configToolKey}`, JSON.stringify(config));
+                showToast('API unreachable — saved locally (will sync on next server start)', 'warning');
+                closeModal('toolConfigModal');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        function loadDashboardData() {
+            document.getElementById('dashTotalScans').textContent = state.dashboardStats.totalScans;
+            document.getElementById('dashCritical').textContent = state.dashboardStats.criticalVulns;
+            document.getElementById('dashHigh').textContent = state.dashboardStats.highVulns;
+            document.getElementById('dashCloudFindings').textContent = state.dashboardStats.cloudFindings;
+            document.getElementById('dashLogsIngested').textContent = (state.dashboardStats.logsIngested / 1000).toFixed(1) + 'K';
+            document.getElementById('dashCompliance').textContent = state.dashboardStats.complianceScore + '%';
+
+            // Load recent scans
+            loadRecentScans();
+        }
+
+        function loadRecentScans() {
+            const scans = [
+                { id: 'scan-2024-001', type: 'Full Scan', target: '/app/src', status: 'completed', critical: 2, high: 5, medium: 12, started: '2024-02-24 14:30' },
+                { id: 'scan-2024-002', type: 'Container', target: 'nginx:1.25', status: 'completed', critical: 1, high: 3, medium: 8, started: '2024-02-24 13:15' },
+                { id: 'scan-2024-003', type: 'IaC', target: './terraform', status: 'completed', critical: 0, high: 2, medium: 4, started: '2024-02-24 12:00' },
+                { id: 'scan-2024-004', type: 'SBOM', target: './package.json', status: 'completed', critical: 3, high: 8, medium: 15, started: '2024-02-23 16:45' },
+                { id: 'scan-2024-005', type: 'URL', target: 'https://api.example.com', status: 'completed', critical: 0, high: 1, medium: 2, started: '2024-02-23 10:20' }
+            ];
+
+            const tbody = document.getElementById('recentScansBody');
+            tbody.innerHTML = scans.map(scan => `
+                <tr>
+                    <td><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #10b981;">${scan.id}</code></td>
+                    <td>${scan.type}</td>
+                    <td>${scan.target}</td>
+                    <td><span class="status-badge status-success">✓ ${scan.status}</span></td>
+                    <td><span style="color: #dc2626; font-weight: 600;">${scan.critical}</span></td>
+                    <td><span style="color: #ea580c; font-weight: 600;">${scan.high}</span></td>
+                    <td><span style="color: #eab308; font-weight: 600;">${scan.medium}</span></td>
+                    <td>${scan.started}</td>
+                </tr>
+            `).join('');
+        }
+
+        function refreshDashboard() {
+            const btn = document.getElementById('refreshBtn');
+            btn.style.opacity = '0.5';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                loadDashboardData();
+                showToast('Dashboard refreshed', 'success');
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }, 1000);
+        }
+
+        function toggleExpandable(btn) {
+            btn.classList.toggle('expanded');
+            const content = btn.nextElementSibling;
+            if (content && content.classList.contains('expand-content')) {
+                content.classList.toggle('visible');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function initializeWebSocket() {
+            try {
+                const wsUrl = state.wsEndpoint + '/ws/ui-session';
+                state.ws = new WebSocket(wsUrl);
+
+                state.ws.onopen = () => {
+                    console.log('WebSocket connected');
+                };
+
+                state.ws.onmessage = (event) => {
+                    console.log('WebSocket message:', event.data);
+                };
+
+                state.ws.onerror = (error) => {
+                    console.log('WebSocket error:', error);
+                };
+
+                state.ws.onclose = () => {
+                    console.log('WebSocket disconnected');
+                };
+            } catch (e) {
+                console.log('WebSocket unavailable (API may not be running)');
+            }
+        }
+
+        // Click handlers for modal
+        document.getElementById('ingestConfirmBtn').addEventListener('click', function() {
+            const sourceType = document.getElementById('ingestSourceType').value;
+            if (!sourceType || sourceType === 'Select a source...') {
+                showToast('Please select a source type', 'error');
+                return;
+            }
+            showToast(`Ingesting logs from ${sourceType}...`, 'success');
+            setTimeout(() => {
+                closeModal('ingestLogsModal');
+                const logs = generateMockLogs(50);
+                displayLogs(logs);
+                updateLogStats(logs);
+            }, 1500);
+        });
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // Initialize scan options
+        updateScanOptions();
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# ShieldKit Dependencies
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+duckdb>=1.0.0
+
+# AI providers (optional — install what you use)
+anthropic>=0.40.0
+# openai>=1.50.0
+
+# Cloud providers (optional — install for live mode)
+# boto3>=1.34.0           # AWS
+# azure-identity>=1.15.0  # Azure
+# google-cloud-core>=2.4  # GCP
+
+# Log parsing
+# drain3>=0.9.11          # Optional: ML-based log template extraction
+
+# DAST / OWASP ZAP (optional — Docker mode requires no pip packages)
+# zaproxy>=0.3.0          # Python client for ZAP daemon API mode (alternative to Docker)
