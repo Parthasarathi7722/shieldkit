@@ -16,7 +16,7 @@ It runs standalone in **mock mode with zero external tools** — open the browse
 ## What's Inside
 
 | Category | Tool | What It Does |
-|---|---|---|
+| --- | --- | --- |
 | SBOM Generation | Syft | Software Bill of Materials — CycloneDX / SPDX |
 | SCA | Grype | CVE scanning against dependency databases |
 | Container Scanning | Trivy | OS + app vulnerabilities in container images |
@@ -33,7 +33,7 @@ It runs standalone in **mock mode with zero external tools** — open the browse
 ## Prerequisites
 
 | Requirement | Version | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Python | 3.10+ | For running the FastAPI server directly |
 | Docker | 24+ | Optional — required for Docker Compose quickstart and ZAP DAST |
 | pip packages | see `requirements.txt` | `pip install -r requirements.txt` |
@@ -226,6 +226,13 @@ Configs persist to `data/tool_configs.json` and are applied to the process envir
 
 **Scanner** tab → select scan type → enter target → (optionally pick a policy) → **Run Scan**
 
+The target input area adapts dynamically as you work:
+
+- **Target-type pills auto-filter** — when you switch scan type, the source pills (Auto / Upload / Public URL / Private URL / S3 / Git / Container) automatically hide options that are not valid for that type. For example, URL scans show only Auto / Public URL / Private URL; Container scans hide the Git pill; IaC scans hide the Container pill.
+- **Contextual hint panel** — after selecting a target type, a hint panel appears below the target input showing accepted file formats, example values, and shell commands to prepare the artifact (e.g., `docker save nginx:latest -o nginx.tar` for container file uploads; `zip -r infra.zip terraform/` for IaC file uploads).
+- **URL / S3 / GitHub auto-detection** — while typing in the target field in Auto mode, ShieldKit inspects the value and shows a dismissible banner when it detects a GitHub / GitLab / Bitbucket URL (suggests switching to Git), an `s3://` URI (suggests S3), or a plain `https://` URL (suggests Public URL). A one-click link in the banner switches the target type immediately.
+- **Recent-uploads quick-pick** — when the Upload target type is active, a row appears below the dropzone listing the 8 most recent uploads retrieved from `/uploads`. Select one from the picker and click **Use** to reuse a previous artifact without re-uploading.
+
 Each scan type has a dedicated options panel:
 - **SBOM / SCA / Container / IaC** — policy picker, format/severity options
 - **URL (Nuclei)** — template categories, severity, rate limit, concurrency, custom templates
@@ -304,7 +311,9 @@ curl -X POST http://localhost:8000/cloud/scan \
 
 ## Scan Policies
 
-Named, reusable scan settings per tool. Create via the UI (Tools tab → Configure → Policies) or API:
+Named, reusable scan settings per tool. Create via the UI (Tools tab → Configure → Policies) or API.
+
+Policies can store a **Default Target** (a target type and value) at the bottom of the policy editor. When you apply a policy from the Scanner tab, the target field and the target-type pill are automatically pre-filled with the stored defaults, removing the need to re-enter a target for recurring scans.
 
 ```bash
 # Create a strict production policy for Grype
@@ -394,7 +403,7 @@ The **CI/CD Integration** tab generates ready-to-copy pipeline configs for 8 pla
 ### Supported Platforms
 
 | Platform | Output File |
-|---|---|
+| --- | --- |
 | GitHub Actions | `.github/workflows/shieldkit.yml` |
 | Jenkins | `Jenkinsfile` |
 | GitLab CI | `.gitlab-ci.yml` |
@@ -522,9 +531,9 @@ ORDER BY ts;
 ## Browser UI Tabs
 
 | Tab | What it does |
-|---|---|
+| --- | --- |
 | **Dashboard** | Clickable stat cards (Critical/High/Cloud/Logs), live scan history with report modal, quick-action buttons |
-| **Scanner** | Select scan type → enter target → configure options / policy → run → live results |
+| **Scanner** | Select scan type → target pills auto-filter to valid types → contextual hints + file-format guidance → URL/S3/GitHub auto-detection → recent-uploads quick-pick → configure options / policy → run → live results |
 | **Cloud Security** | Provider + compliance selector → run posture scan → findings table |
 | **Log Explorer** | Search / SQL query panel · Stats sidebar · Log results table · Investigate & Correlate panel |
 | **Tools & Config** | Install tools (tier presets / batch install) · Configure credentials · Manage scan policies |
@@ -540,7 +549,7 @@ ORDER BY ts;
 Full interactive docs at `http://localhost:8000/docs` (Swagger UI).
 
 | Method | Path | Description |
-|---|---|---|
+| --- | --- | --- |
 | GET | `/health` | Server status and mode |
 | POST | `/scan/sbom` | Generate SBOM (Syft) |
 | POST | `/scan/sca` | Vulnerability scan (Grype) |
@@ -549,6 +558,9 @@ Full interactive docs at `http://localhost:8000/docs` (Swagger UI).
 | POST | `/scan/iac` | IaC misconfiguration scan (Checkov) |
 | POST | `/scan/zap` | DAST scan (OWASP ZAP) |
 | POST | `/scan/full` | Parallel SBOM + SCA + Container |
+| POST | `/scan/upload` | Upload a file artifact for scanning (multipart/form-data) |
+| GET | `/uploads` | List previously uploaded files |
+| DELETE | `/uploads/{id}` | Delete an uploaded file |
 | POST | `/cloud/scan` | Cloud posture scan |
 | POST | `/cloud/scan-all` | Scan all configured cloud providers |
 | GET | `/cloud/providers` | Supported providers and tools |
@@ -583,7 +595,7 @@ Full interactive docs at `http://localhost:8000/docs` (Swagger UI).
 | GET | `/db/config` | Current database backend config |
 | POST | `/db/config` | Save database backend config (`{"config": {...}}`) |
 | POST | `/db/test` | Test database backend connection (`{"config": {...}}`) |
-| POST | `/db/sync` | Trigger manual S3 sync (`{"direction": "upload"\|"download"}`) |
+| POST | `/db/sync` | Trigger manual S3 sync (`{"direction": "upload" or "download"}`) |
 | GET | `/db/status` | Current database connection status |
 | POST | `/chat` | SOC Analyst — single-turn REST (`{"messages": [{"role": "user", "content": "..."}], "api_key": "..."}`) |
 | WS | `/chat/ws` | SOC Analyst — streaming WebSocket |
@@ -593,7 +605,7 @@ Full interactive docs at `http://localhost:8000/docs` (Swagger UI).
 ## Deployment Tiers
 
 | Tier | Tools Included | Use Case |
-|---|---|---|
+| --- | --- | --- |
 | **Starter** | Syft, Grype, Trivy | Dev / CI — SBOM + CVE + container |
 | **Full Scanner** | Starter + Nuclei, Checkov | + URL endpoint tests + IaC checks |
 | **Cloud Security** | Full Scanner + Prowler, ScoutSuite | + AWS / Azure / GCP posture |
@@ -622,7 +634,7 @@ ShieldKit exposes itself as an MCP server for [SOCPilot](https://github.com/Part
 This exposes 9 tools to the SOCPilot AI agent:
 
 | MCP Tool | Maps To |
-|---|---|
+| --- | --- |
 | `shieldkit_sbom` | `POST /scan/sbom` |
 | `shieldkit_sca` | `POST /scan/sca` |
 | `shieldkit_container_scan` | `POST /scan/container` |
@@ -646,7 +658,7 @@ This exposes 9 tools to the SOCPilot AI agent:
 Store API keys and credentials securely. Reference them as `sk://key-name` anywhere in tool configs — the server resolves to plaintext only at scan time.
 
 | Provider | Description |
-|---|---|
+| --- | --- |
 | **Local (AES-256)** | Fernet-encrypted file in `data/secrets.enc`. Zero external dependencies. Default. |
 | **HashiCorp Vault** | KV v2. Token auth. No SDK required — pure REST. |
 | **AWS Secrets Manager** | boto3. `shieldkit/{key}` naming convention. |
@@ -672,7 +684,7 @@ curl -X POST http://localhost:8000/secrets/set \
 DuckDB data survives server restarts and CI runner teardowns with cloud backends.
 
 | Backend | Description | Connection |
-|---|---|---|
+| --- | --- | --- |
 | **Local** | `data/shieldkit.duckdb` (default) | Lost on ephemeral runners |
 | **MotherDuck** | DuckDB Cloud — free tier available | `md:shieldkit?token=...` |
 | **S3 Sync** | Download on startup, upload on shutdown | Any S3-compatible store |
@@ -728,7 +740,7 @@ shieldkit/
 │   ├── mcp_server.py       # MCP JSON-RPC server (9 tools for SOCPilot)
 │   └── __main__.py         # Entry point: python -m shieldkit.mcp_plugin
 ├── ui/
-│   └── index.html          # Single-file SPA — all 9 tabs, styles, JS
+│   └── index.html          # Single-file SPA — all 10 tabs, styles, JS (~6500 lines)
 ├── data/
 │   ├── shieldkit.duckdb    # All persistent data (auto-created)
 │   ├── tool_configs.json   # Saved tool configurations (auto-created)

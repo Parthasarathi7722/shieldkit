@@ -164,6 +164,32 @@ class LogStats(BaseModel):
     top_actions: list[dict[str, Any]] = Field(default_factory=list)
 
 
+# ── Target Resolution ────────────────────────────────────────────
+
+class TargetType(str, Enum):
+    AUTO        = "auto"
+    FILE_UPLOAD = "file_upload"
+    PUBLIC_URL  = "public_url"
+    PRIVATE_URL = "private_url"
+    S3          = "s3"
+    CONTAINER   = "container"
+    GIT         = "git"
+    LOCAL_PATH  = "local_path"
+
+
+class TargetCredentials(BaseModel):
+    type: str = "bearer"      # bearer | basic | header
+    token: str = ""           # may be sk:// ref
+    username: str = ""        # may be sk:// ref
+    password: str = ""        # may be sk:// ref
+    headers: dict = {}
+    profile: str = ""         # named credential profile (cred_profile_{name})
+    # S3-specific
+    access_key: str = ""
+    secret_key: str = ""
+    region: str = ""
+
+
 # ── Server Request/Response ──────────────────────────────────────
 
 class ScanRequest(BaseModel):

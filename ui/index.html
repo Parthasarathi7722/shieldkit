@@ -1107,6 +1107,18 @@
         .fmt-csv{background:#0d3321;color:#4ade80;}
         .fmt-html{background:#172554;color:#60a5fa;}
         @media(max-width:1100px){.report-layout{grid-template-columns:1fr;}}
+        /* ── Target Resolver UI ── */
+        .target-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+        .target-type-btn{padding:5px 14px;border-radius:16px;border:1px solid #374151;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;transition:all .15s;}
+        .target-type-btn:hover{border-color:#6b7280;color:#d1d5db;}
+        .target-type-btn.active{border-color:#10b981;background:#052e16;color:#10b981;}
+        .upload-dropzone{border:2px dashed #374151;border-radius:8px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .15s;color:#6b7280;}
+        .upload-dropzone:hover,.upload-dropzone.drag-over{border-color:#10b981;background:#052e16;color:#10b981;}
+        .upload-file-info{display:flex;align-items:center;gap:8px;background:#0d2b1e;border:1px solid #10b981;border-radius:6px;padding:8px 12px;font-size:12px;color:#10b981;}
+        .cred-section{margin-top:12px;padding:12px;background:#0a0f1a;border-radius:6px;border:1px solid #1f2937;}
+        .cred-type-btn{padding:4px 12px;border-radius:12px;border:1px solid #374151;background:transparent;color:#9ca3af;cursor:pointer;font-size:11px;transition:all .15s;}
+        .cred-type-btn.active{border-color:#10b981;background:#052e16;color:#10b981;}
+        .target-hint-cmd{background:#050d1a;border:1px solid #1e3a5f;border-radius:4px;padding:5px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#67e8f9;margin-bottom:4px;white-space:pre;user-select:all;cursor:text;}
     </style>
 </head>
 <body>
@@ -1267,8 +1279,73 @@
                         </div>
 
                         <div class="form-group">
+                            <div class="form-label">Target Source</div>
+                            <div class="target-type-row" id="targetTypeRow">
+                                <button class="target-type-btn active" onclick="selectTargetType('auto')">🔍 Auto</button>
+                                <button class="target-type-btn" onclick="selectTargetType('file_upload')">📁 Upload</button>
+                                <button class="target-type-btn" onclick="selectTargetType('public_url')">🌐 Public URL</button>
+                                <button class="target-type-btn" onclick="selectTargetType('private_url')">🔒 Private URL</button>
+                                <button class="target-type-btn" onclick="selectTargetType('s3')">☁ S3</button>
+                                <button class="target-type-btn" onclick="selectTargetType('container')">🐳 Container</button>
+                                <button class="target-type-btn" onclick="selectTargetType('git')">🔀 Git</button>
+                            </div>
+
+                            <div id="autoDetectBadge" style="display:none;font-size:11px;padding:5px 10px;background:#051e10;border:1px solid #065f46;border-radius:4px;color:#34d399;margin-bottom:6px;"></div>
+
+                            <!-- Upload Drop Zone (shown when target_type = file_upload) -->
+                            <div id="uploadZone" style="display:none;margin-bottom:12px;">
+                                <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                                    <div style="font-size:24px;margin-bottom:6px;">📂</div>
+                                    <div>Drop file here or <span style="color:#10b981;">click to browse</span></div>
+                                    <div style="font-size:11px;margin-top:4px;">.tar.gz · .zip · .jar · .sbom.json · any artifact</div>
+                                </div>
+                                <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
+                                <div id="uploadFileInfo" style="display:none;" class="upload-file-info">
+                                    <span>📎</span>
+                                    <span id="uploadFileName" style="font-weight:500;"></span>
+                                    <span id="uploadFileSize" style="color:#4b5563;"></span>
+                                    <button onclick="clearUpload()" style="margin-left:auto;background:none;border:none;color:#6b7280;cursor:pointer;font-size:14px;">✕</button>
+                                </div>
+                                <div id="recentUploadsRow" style="display:none;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:#6b7280;flex-wrap:wrap;">
+                                    <span style="white-space:nowrap;">Or use a recent upload:</span>
+                                    <select id="recentUploadsPicker" class="form-input" style="flex:1;height:30px;font-size:12px;padding:2px 6px;min-width:150px;"></select>
+                                    <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="useRecentUpload()">Use →</button>
+                                </div>
+                            </div>
+
+                            <!-- Credential Section (shown for private_url, s3, git) -->
+                            <div id="credSection" class="cred-section" style="display:none;margin-bottom:12px;">
+                                <div style="font-size:12px;font-weight:600;color:#9ca3af;margin-bottom:8px;">Authentication</div>
+                                <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                                    <button class="cred-type-btn active" id="credBearerBtn" onclick="selectCredType('bearer')">Bearer Token</button>
+                                    <button class="cred-type-btn" id="credBasicBtn" onclick="selectCredType('basic')">Basic Auth</button>
+                                    <button class="cred-type-btn" id="credHeaderBtn" onclick="selectCredType('header')">Custom Headers</button>
+                                    <button class="cred-type-btn" id="credProfileBtn" onclick="selectCredType('profile')">Saved Profile</button>
+                                </div>
+                                <div id="credBearerPanel">
+                                    <input type="password" class="form-input" id="credToken" placeholder="Bearer token or sk:// reference" style="font-size:12px;">
+                                </div>
+                                <div id="credBasicPanel" style="display:none;">
+                                    <div style="display:flex;gap:6px;margin-bottom:6px;">
+                                        <input type="text" class="form-input" id="credUsername" placeholder="Username" style="font-size:12px;flex:1;">
+                                        <input type="password" class="form-input" id="credPassword" placeholder="Password" style="font-size:12px;flex:1;">
+                                    </div>
+                                </div>
+                                <div id="credHeaderPanel" style="display:none;">
+                                    <textarea class="form-input" id="credHeaders" placeholder='{"X-API-Key": "value"}' rows="3" style="font-size:12px;font-family:monospace;"></textarea>
+                                </div>
+                                <div id="credProfilePanel" style="display:none;">
+                                    <select class="form-input" id="credProfileSelect" style="font-size:12px;">
+                                        <option value="">Loading profiles...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <div class="form-label">Target</div>
-                            <input type="text" class="form-input" id="scanTarget" placeholder="Enter path, URL, or repository...">
+                            <input type="text" class="form-input" id="scanTarget" oninput="detectTargetType(this.value)" placeholder="Enter path, URL, or repository...">
+                            <div id="targetHintPanel" style="display:none;margin-top:8px;padding:10px 12px;background:#0a1628;border:1px solid #1e3a5f;border-radius:6px;font-size:12px;"></div>
                         </div>
 
                         <div class="form-group" id="scanOptionsGroup">
@@ -1856,6 +1933,26 @@
                     </div>
                   </div>
 
+                  <!-- Credential Profiles -->
+                  <div class="card" style="margin-top:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                      <div style="font-size:16px;font-weight:600;color:#f3f4f6;">🔑 Credential Profiles</div>
+                      <button class="btn btn-secondary btn-small" onclick="showAddCredProfileModal()">+ Add Profile</button>
+                    </div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Named credential profiles for private URLs, S3, and Git repositories. Select a saved profile in the Scanner tab.</div>
+                    <div id="credProfilesList"><div style="color:#4b5563;font-size:13px;">Loading...</div></div>
+                  </div>
+
+                  <!-- Uploaded Artifacts -->
+                  <div class="card" style="margin-top:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                      <div style="font-size:16px;font-weight:600;color:#f3f4f6;">📦 Uploaded Artifacts</div>
+                      <button class="btn btn-secondary btn-small" onclick="refreshArtifactsList()">↻ Refresh</button>
+                    </div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Files uploaded for scanning. Each artifact is referenced by its upload ID. Delete when no longer needed.</div>
+                    <div id="artifactsList"><div style="color:#4b5563;font-size:13px;">Loading...</div></div>
+                  </div>
+
                 </div>
 
                 <!-- Add Secret Modal -->
@@ -1878,6 +1975,58 @@
                       <div style="display:flex;gap:8px;justify-content:flex-end;">
                         <button class="btn btn-secondary" onclick="closeModal('addSecretModal')">Cancel</button>
                         <button class="btn btn-primary" onclick="addSecret()">Save Secret</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Add Credential Profile Modal -->
+                <div id="addCredProfileModal" class="modal">
+                  <div class="modal-content" style="max-width:520px;">
+                    <div class="modal-header">
+                      <div class="modal-title">Add Credential Profile</div>
+                      <button class="modal-close" onclick="closeModal('addCredProfileModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <div class="form-label">Profile Name</div>
+                        <input class="form-input" id="cpName" placeholder="e.g. corp-nexus">
+                      </div>
+                      <div class="form-group">
+                        <div class="form-label">Auth Type</div>
+                        <select class="form-input" id="cpType" onchange="updateCredProfileFields()">
+                          <option value="bearer">Bearer Token</option>
+                          <option value="basic">Basic Auth</option>
+                          <option value="header">Custom Headers</option>
+                        </select>
+                      </div>
+                      <div id="cpBearerFields">
+                        <div class="form-group">
+                          <div class="form-label">Token</div>
+                          <input class="form-input" id="cpToken" type="password" placeholder="Bearer token">
+                        </div>
+                      </div>
+                      <div id="cpBasicFields" style="display:none;">
+                        <div style="display:flex;gap:6px;">
+                          <div class="form-group" style="flex:1;">
+                            <div class="form-label">Username</div>
+                            <input class="form-input" id="cpUsername" placeholder="username">
+                          </div>
+                          <div class="form-group" style="flex:1;">
+                            <div class="form-label">Password</div>
+                            <input class="form-input" id="cpPassword" type="password" placeholder="password">
+                          </div>
+                        </div>
+                      </div>
+                      <div id="cpHeaderFields" style="display:none;">
+                        <div class="form-group">
+                          <div class="form-label">Headers (JSON)</div>
+                          <textarea class="form-input" id="cpHeaders" placeholder='{"X-API-Key": "value"}' rows="3" style="font-family:monospace;font-size:12px;"></textarea>
+                        </div>
+                      </div>
+                      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                        <button class="btn btn-secondary" onclick="closeModal('addCredProfileModal')">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveCredProfile()">Save Profile</button>
                       </div>
                     </div>
                   </div>
@@ -2421,6 +2570,8 @@
 
             // Scanner Buttons
             document.getElementById('runScanBtn').addEventListener('click', runScan);
+            setupDropzone();
+            updateTargetForScanType(state.selectedScanType || 'sbom');
             document.getElementById('runCloudScanBtn').addEventListener('click', runCloudScan);
             document.getElementById('searchLogsBtn').addEventListener('click', searchLogs);
             document.getElementById('ingestLogsBtn').addEventListener('click', openIngestModal);
@@ -2506,6 +2657,7 @@
                 }
             });
             updateScanOptions();
+            updateTargetForScanType(scanType);
         }
 
         const SCAN_TYPE_TOOL = { sbom: 'syft', sca: 'grype', container: 'trivy', url: 'nuclei', iac: 'checkov', dast: 'zap' };
@@ -2905,6 +3057,7 @@
                 }
             }
             showToast(`Policy "${policyName}" applied`, 'info');
+            if (policy.defaultTarget) applyPolicyTarget(policy.defaultTarget);
         }
 
         async function openConfigForPolicies(toolKey) {
@@ -3031,7 +3184,11 @@
                     <input type="text" class="form-input" id="pol-description" value="${policy?.description || ''}" placeholder="Optional description">
                 </div>
                 <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#6b7280; margin:16px 0 12px; padding-bottom:6px; border-bottom:1px solid #1f2937;">Scan Settings</div>
-                ${fieldHtml}`;
+                ${fieldHtml}
+                <div style="border-top:1px solid #1f2937;padding-top:16px;margin-top:16px;">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:8px;">Default Target <span style="font-weight:400;font-style:italic;text-transform:none;">(optional — pre-fills scan form when policy is applied)</span></div>
+                    ${_renderPolicyDefaultTarget(policy?.defaultTarget)}
+                </div>`;
 
             document.getElementById('saveConfigBtn').style.display  = 'none';
             document.getElementById('savePolicyBtn').style.display   = '';
@@ -3067,10 +3224,16 @@
                 }
             }
 
+            const dtType  = document.getElementById('pol-dt-type')?.value || '';
+            const dtValue = (document.getElementById('pol-dt-value')?.value || '').trim();
+            const dtLabelRaw = (document.getElementById('pol-dt-label')?.textContent || '').replace('📎 ', '').split(' (most')[0];
+            const defaultTarget = (dtType && dtValue) ? {type: dtType, value: dtValue, label: dtLabelRaw} : undefined;
+
             const policy = {
                 name,
                 description: document.getElementById('pol-description')?.value?.trim() || '',
                 settings,
+                ...(defaultTarget ? {defaultTarget} : {}),
             };
 
             const btn     = document.getElementById('savePolicyBtn');
@@ -3119,11 +3282,23 @@
         // ────────────────────────────────────────────────────────────
 
         async function runScan() {
-            const target = document.getElementById('scanTarget').value;
-            if (!target) {
-                showToast('Please enter a target', 'error');
-                return;
+            // Determine effective target
+            let target;
+            if (_targetType === 'file_upload') {
+                if (!_uploadId) {
+                    showToast('Please upload a file first', 'error');
+                    return;
+                }
+                target = _uploadId;
+            } else {
+                target = document.getElementById('scanTarget').value.trim();
+                if (!target) {
+                    showToast('Please enter a target', 'error');
+                    return;
+                }
             }
+
+            const credentials = buildCredentials();
 
             const btn = document.getElementById('runScanBtn');
             btn.disabled = true;
@@ -3133,13 +3308,13 @@
                 let endpoint, body;
                 if (state.selectedScanType === 'dast') {
                     endpoint = `${state.apiEndpoint}/scan/zap`;
-                    body = { target, ...collectZAPOptions() };
+                    body = { target, target_type: _targetType, credentials, ...collectZAPOptions() };
                 } else if (state.selectedScanType === 'url') {
                     endpoint = `${state.apiEndpoint}/scan/url`;
-                    body = { target, options: collectURLScanOptions() };
+                    body = { target, target_type: _targetType, credentials, options: collectURLScanOptions() };
                 } else {
                     endpoint = `${state.apiEndpoint}/scan/${state.selectedScanType}`;
-                    body = { target };
+                    body = { target, target_type: _targetType, credentials };
                 }
 
                 // Merge active policy settings into request
@@ -5023,6 +5198,8 @@ reports:
             await loadSecretKeys();
             await loadDBStatus();
             await renderQuickApiKeys();
+            renderCredProfilesList();
+            refreshArtifactsList();
             return;
           }
 
@@ -5072,6 +5249,8 @@ reports:
           await loadSecretKeys();
           await loadDBStatus();
           renderQuickApiKeys();
+          renderCredProfilesList();
+          refreshArtifactsList();
         }
 
         function selectSecretsProvider(key) {
@@ -5581,6 +5760,474 @@ reports:
 
         function _escHtml(str) {
             return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Target Resolver UI ─────────────────────────────────────
+
+        let _targetType = 'auto';
+        let _uploadId = null;
+        let _credType = 'bearer';
+
+        function selectTargetType(type) {
+            _targetType = type;
+            // Update pill buttons
+            document.querySelectorAll('#targetTypeRow .target-type-btn').forEach(btn => {
+                const btnType = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+                btn.classList.toggle('active', btnType === type);
+            });
+            // Show/hide upload zone
+            const showUpload = type === 'file_upload';
+            document.getElementById('uploadZone').style.display = showUpload ? 'block' : 'none';
+            // Show/hide target text input
+            document.getElementById('scanTarget').style.display = showUpload ? 'none' : 'block';
+            // Show/hide credential section
+            const showCred = ['private_url', 's3', 'git'].includes(type);
+            document.getElementById('credSection').style.display = showCred ? 'block' : 'none';
+            if (showCred) loadCredProfiles();
+            updateTargetHint();
+            if (type === 'file_upload') loadRecentUploads();
+        }
+
+        function selectCredType(type) {
+            _credType = type;
+            ['bearer', 'basic', 'header', 'profile'].forEach(t => {
+                const btn = document.getElementById('cred' + t.charAt(0).toUpperCase() + t.slice(1) + 'Btn');
+                const panel = document.getElementById('cred' + t.charAt(0).toUpperCase() + t.slice(1) + 'Panel');
+                if (btn) btn.classList.toggle('active', t === type);
+                if (panel) panel.style.display = t === type ? 'block' : 'none';
+            });
+        }
+
+        function buildCredentials() {
+            if (!['private_url', 's3', 'git'].includes(_targetType)) return null;
+            if (_credType === 'profile') {
+                const sel = document.getElementById('credProfileSelect');
+                return sel && sel.value ? { profile: sel.value } : null;
+            }
+            if (_credType === 'bearer') {
+                const token = document.getElementById('credToken').value.trim();
+                return token ? { type: 'bearer', token } : null;
+            }
+            if (_credType === 'basic') {
+                const username = document.getElementById('credUsername').value.trim();
+                const password = document.getElementById('credPassword').value.trim();
+                return (username || password) ? { type: 'basic', username, password } : null;
+            }
+            if (_credType === 'header') {
+                const raw = document.getElementById('credHeaders').value.trim();
+                try { return { type: 'header', headers: JSON.parse(raw || '{}') }; }
+                catch { showToast('Invalid JSON in custom headers', 'error'); return null; }
+            }
+            return null;
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) await uploadArtifact(file);
+        }
+
+        function setupDropzone() {
+            const dz = document.getElementById('dropzone');
+            if (!dz) return;
+            dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+            dz.addEventListener('drop', async e => {
+                e.preventDefault();
+                dz.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) await uploadArtifact(file);
+            });
+        }
+
+        async function uploadArtifact(file) {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('scan_type', state.selectedScanType || '');
+            try {
+                const res = await fetch(`${state.apiEndpoint}/scan/upload`, { method: 'POST', body: fd });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                _uploadId = data.upload_id;
+                document.getElementById('uploadFileName').textContent = data.filename;
+                document.getElementById('uploadFileSize').textContent = `(${(data.size/1024).toFixed(1)} KB)`;
+                document.getElementById('uploadFileInfo').style.display = 'flex';
+                document.getElementById('dropzone').style.display = 'none';
+                showToast(`Uploaded: ${data.filename}`, 'success');
+            } catch (e) {
+                showToast(`Upload failed: ${e.message}`, 'error');
+            }
+        }
+
+        function clearUpload() {
+            _uploadId = null;
+            document.getElementById('uploadFileInfo').style.display = 'none';
+            document.getElementById('dropzone').style.display = 'block';
+            document.getElementById('fileInput').value = '';
+            loadRecentUploads();
+        }
+
+        async function loadCredProfiles() {
+            const sel = document.getElementById('credProfileSelect');
+            if (!sel) return;
+            try {
+                const res = await fetch(`${state.apiEndpoint}/credentials/profiles`);
+                const data = await res.json();
+                const profiles = data.profiles || [];
+                sel.innerHTML = profiles.length
+                    ? profiles.map(p => `<option value="${_escHtml(p.name)}">${_escHtml(p.name)}</option>`).join('')
+                    : '<option value="">No profiles saved</option>';
+            } catch { sel.innerHTML = '<option value="">Failed to load</option>'; }
+        }
+
+        // ── Artifacts List (Infrastructure tab) ────────────────────
+
+        async function refreshArtifactsList() {
+            const el = document.getElementById('artifactsList');
+            if (!el) return;
+            try {
+                const res = await fetch(`${state.apiEndpoint}/uploads`);
+                const data = await res.json();
+                const uploads = data.uploads || [];
+                if (!uploads.length) {
+                    el.innerHTML = '<div style="color:#4b5563;font-size:13px;">No uploaded artifacts.</div>';
+                    return;
+                }
+                el.innerHTML = uploads.map(u => `
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1f2937;">
+                    <span style="font-size:16px;">📎</span>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:13px;color:#f3f4f6;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_escHtml(u.filename)}</div>
+                      <div style="font-size:11px;color:#6b7280;">ID: <code style="color:#10b981;font-family:monospace;">${_escHtml(u.id)}</code> &nbsp;·&nbsp; ${(u.size/1024).toFixed(1)} KB &nbsp;·&nbsp; ${u.created_at ? u.created_at.substring(0,10) : ''}</div>
+                    </div>
+                    <button onclick="deleteArtifact('${_escHtml(u.id)}')" style="background:none;border:1px solid #374151;color:#ef4444;cursor:pointer;border-radius:4px;padding:3px 8px;font-size:11px;">Delete</button>
+                  </div>`).join('');
+            } catch { el.innerHTML = '<div style="color:#4b5563;font-size:13px;">Failed to load artifacts.</div>'; }
+        }
+
+        async function deleteArtifact(id) {
+            if (!confirm('Delete this artifact?')) return;
+            try {
+                await fetch(`${state.apiEndpoint}/uploads/${id}`, { method: 'DELETE' });
+                showToast('Artifact deleted', 'success');
+                refreshArtifactsList();
+            } catch { showToast('Delete failed', 'error'); }
+        }
+
+        // ── Credential Profiles (Infrastructure tab) ───────────────
+
+        async function renderCredProfilesList() {
+            const el = document.getElementById('credProfilesList');
+            if (!el) return;
+            try {
+                const res = await fetch(`${state.apiEndpoint}/credentials/profiles`);
+                const data = await res.json();
+                const profiles = data.profiles || [];
+                if (!profiles.length) {
+                    el.innerHTML = '<div style="color:#4b5563;font-size:13px;">No credential profiles saved.</div>';
+                    return;
+                }
+                el.innerHTML = profiles.map(p => `
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1f2937;">
+                    <span style="font-size:16px;">🔑</span>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;color:#f3f4f6;font-weight:500;">${_escHtml(p.name)}</div>
+                      <div style="font-size:11px;color:#6b7280;">key: <code style="font-family:monospace;color:#6b7280;">${_escHtml(p.key)}</code></div>
+                    </div>
+                    <button onclick="deleteCredProfile('${_escHtml(p.name)}')" style="background:none;border:1px solid #374151;color:#ef4444;cursor:pointer;border-radius:4px;padding:3px 8px;font-size:11px;">Delete</button>
+                  </div>`).join('');
+            } catch { el.innerHTML = '<div style="color:#4b5563;font-size:13px;">Failed to load profiles.</div>'; }
+        }
+
+        function showAddCredProfileModal() {
+            document.getElementById('cpName').value = '';
+            document.getElementById('cpToken').value = '';
+            document.getElementById('cpUsername').value = '';
+            document.getElementById('cpPassword').value = '';
+            document.getElementById('cpHeaders').value = '';
+            document.getElementById('cpType').value = 'bearer';
+            updateCredProfileFields();
+            document.getElementById('addCredProfileModal').classList.add('active');
+        }
+
+        function updateCredProfileFields() {
+            const type = document.getElementById('cpType').value;
+            document.getElementById('cpBearerFields').style.display = type === 'bearer' ? 'block' : 'none';
+            document.getElementById('cpBasicFields').style.display = type === 'basic' ? 'block' : 'none';
+            document.getElementById('cpHeaderFields').style.display = type === 'header' ? 'block' : 'none';
+        }
+
+        async function saveCredProfile() {
+            const name = document.getElementById('cpName').value.trim();
+            if (!name) { showToast('Profile name is required', 'error'); return; }
+            const type = document.getElementById('cpType').value;
+            const body = { name, type,
+                token: document.getElementById('cpToken').value,
+                username: document.getElementById('cpUsername').value,
+                password: document.getElementById('cpPassword').value,
+            };
+            if (type === 'header') {
+                try { body.headers = JSON.parse(document.getElementById('cpHeaders').value || '{}'); }
+                catch { showToast('Invalid JSON headers', 'error'); return; }
+            }
+            try {
+                const res = await fetch(`${state.apiEndpoint}/credentials/profiles`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+                });
+                if (!res.ok) throw new Error(await res.text());
+                closeModal('addCredProfileModal');
+                showToast(`Profile '${name}' saved`, 'success');
+                renderCredProfilesList();
+            } catch (e) { showToast(`Save failed: ${e.message}`, 'error'); }
+        }
+
+        async function deleteCredProfile(name) {
+            if (!confirm(`Delete credential profile '${name}'?`)) return;
+            try {
+                await fetch(`${state.apiEndpoint}/credentials/profiles/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                showToast('Profile deleted', 'success');
+                renderCredProfilesList();
+            } catch { showToast('Delete failed', 'error'); }
+        }
+
+        // ── Scan-type-aware target filtering + hints ────────────────
+
+        const SCAN_TYPE_TARGET_COMPAT = {
+            sbom:      ['auto','file_upload','public_url','private_url','s3','container','git'],
+            sca:       ['auto','file_upload','public_url','private_url','s3','container','git'],
+            container: ['auto','file_upload','container','public_url','private_url'],
+            url:       ['auto','public_url','private_url'],
+            iac:       ['auto','file_upload','public_url','private_url','s3','git'],
+            dast:      ['auto','public_url','private_url'],
+            full:      ['auto','file_upload','container','git'],
+        };
+        const SCAN_TYPE_DEFAULT_TARGET = {
+            sbom:'file_upload', sca:'file_upload', container:'container',
+            url:'public_url', iac:'file_upload', dast:'public_url', full:'auto',
+        };
+        const TARGET_HINTS = {
+            sbom: {
+                auto:        {icon:'🔍', tip:'Paste an image ref, URL, path — ShieldKit auto-detects.'},
+                file_upload: {icon:'📦', tip:'Upload a .zip / .tar.gz of your project, a .jar, or SBOM JSON.',
+                              accept:'.zip,.tar.gz,.jar,.json,.spdx'},
+                container:   {icon:'🐳', tip:'Syft pulls and analyses the image from the registry.',
+                              example:'nginx:latest  ·  ghcr.io/org/app:v1.2'},
+                git:         {icon:'🔀', tip:'Repo is cloned (depth 1) then scanned. Add credentials for private repos.',
+                              example:'https://github.com/org/repo'},
+                public_url:  {icon:'🌐', tip:'ShieldKit downloads the archive before scanning.',
+                              example:'https://releases.example.com/app-1.0.tar.gz'},
+                private_url: {icon:'🔒', tip:'Auth headers injected at download time. Configure credentials below.',
+                              example:'https://artifacts.corp/app.tar.gz'},
+                s3:          {icon:'☁',  tip:'ShieldKit downloads via boto3 (requires boto3 installed).',
+                              example:'s3://my-bucket/releases/app-1.0.zip'},
+            },
+            sca: {
+                auto:        {icon:'🔍', tip:'Auto-detect from string pattern.'},
+                file_upload: {icon:'📂', tip:'Upload project archive or a package manifest file.',
+                              accept:'.zip,.tar.gz,.json,.xml,.txt,.lock,.toml',
+                              examples:['package.json','pom.xml','requirements.txt','Gemfile.lock','go.mod']},
+                container:   {icon:'🐳', tip:'Grype scans image layers for vulnerable packages.',
+                              example:'python:3.12-slim  ·  node:20-alpine'},
+                git:         {icon:'🔀', tip:'Clone and scan all dependency manifests in the repo.',
+                              example:'https://github.com/org/backend-api'},
+                public_url:  {icon:'🌐', tip:'Download archive then scan.', example:'https://example.com/myapp.zip'},
+                s3:          {icon:'☁',  tip:'Download from S3 then scan.', example:'s3://builds/myapp-src.zip'},
+            },
+            container: {
+                auto:        {icon:'🔍', tip:'Image ref or upload a .tar exported image.'},
+                file_upload: {icon:'🐳', tip:'Upload a Docker image saved as a .tar file (offline / air-gapped scanning).',
+                              accept:'.tar',
+                              cmd:'docker save nginx:latest -o nginx.tar\ndocker save myapp:v1.2 -o myapp.tar'},
+                container:   {icon:'🐳', tip:'Trivy pulls and scans filesystem + packages.',
+                              example:'nginx:latest  ·  alpine:3.19  ·  myregistry.io/app:prod'},
+                public_url:  {icon:'🌐', tip:'OCI registry URL.', example:'oci://ghcr.io/org/app:latest'},
+                private_url: {icon:'🔒', tip:'Private registry with credentials.', example:'registry.corp/app:prod'},
+            },
+            iac: {
+                auto:        {icon:'🔍', tip:'Auto-detect from path or URL.'},
+                file_upload: {icon:'📁', tip:'Upload a .zip or .tar.gz of your Terraform / CloudFormation / K8s / Ansible files.',
+                              accept:'.zip,.tar.gz,.tf,.yaml,.yml,.json,.template',
+                              cmd:'zip -r infra.zip terraform/\ntar czf infra.tar.gz terraform/'},
+                git:         {icon:'🔀', tip:'Checkov clones the repo and scans all IaC files.',
+                              example:'https://github.com/org/infra-repo'},
+                public_url:  {icon:'🌐', tip:'Download archive then scan.', example:'https://example.com/terraform.zip'},
+                s3:          {icon:'☁',  tip:'Download from S3 then scan.', example:'s3://infra-artifacts/terraform-prod.zip'},
+            },
+            url: {
+                auto:        {icon:'🔍', tip:'Paste any HTTP/HTTPS URL.'},
+                public_url:  {icon:'🌐', tip:'Nuclei scans with security templates. Must be reachable from this server.',
+                              example:'https://example.com  ·  https://api.example.com/v1'},
+                private_url: {icon:'🔒', tip:'Nuclei with auth headers injected. Configure credentials below.',
+                              example:'https://internal-api.corp/v2'},
+            },
+            dast: {
+                auto:        {icon:'🔍', tip:'Paste any HTTP/HTTPS URL.'},
+                public_url:  {icon:'🌐', tip:'ZAP crawls and attacks this URL. ⚠️ Only scan apps you own or have permission to test.',
+                              example:'https://juice-shop.example.com'},
+                private_url: {icon:'🔒', tip:'ZAP with bearer token or basic auth injected into every request.',
+                              example:'https://staging.myapp.internal'},
+            },
+            full: {
+                auto:        {icon:'🔍', tip:'SBOM + SCA + Container run in parallel — all target types accepted.'},
+                file_upload: {icon:'📦', tip:'Upload project archive — SBOM, SCA, and Container scans all run on it.',
+                              accept:'.zip,.tar.gz,.tar,.jar'},
+                container:   {icon:'🐳', tip:'Syft (SBOM) + Grype (SCA) + Trivy (Container) scan in parallel.',
+                              example:'nginx:latest'},
+                git:         {icon:'🔀', tip:'Clone repo then run SBOM + SCA scans.',
+                              example:'https://github.com/org/repo'},
+            },
+        };
+
+        function updateTargetForScanType(scanType) {
+            const compat = SCAN_TYPE_TARGET_COMPAT[scanType] || [];
+            document.querySelectorAll('#targetTypeRow .target-type-btn').forEach(btn => {
+                const m = btn.getAttribute('onclick').match(/'([^']+)'/);
+                if (m) btn.style.display = compat.includes(m[1]) ? '' : 'none';
+            });
+            if (!compat.includes(_targetType)) {
+                selectTargetType(SCAN_TYPE_DEFAULT_TARGET[scanType] || 'auto');
+            } else {
+                updateTargetHint();
+            }
+        }
+
+        function updateTargetHint() {
+            const h = (TARGET_HINTS[state.selectedScanType] || {})[_targetType];
+            const panel = document.getElementById('targetHintPanel');
+            if (!panel) return;
+            if (!h) { panel.style.display = 'none'; return; }
+
+            let html = `<div style="display:flex;gap:8px;align-items:flex-start;">
+                <span style="font-size:18px;flex-shrink:0;">${h.icon}</span><div style="flex:1;">
+                <div style="color:#9ca3af;line-height:1.6;">${h.tip}</div>`;
+
+            if (h.example) {
+                const ex = h.example.split('  ·  ');
+                html += `<div style="margin-top:6px;font-size:11px;color:#6b7280;">Example${ex.length>1?'s':''}: `
+                     + ex.map(e=>`<code style="background:#0d1b2e;padding:1px 6px;border-radius:3px;color:#10b981;font-family:monospace;">${_escHtml(e.trim())}</code>`).join('  ')
+                     + '</div>';
+            }
+            if (h.examples) {
+                html += `<div style="margin-top:6px;font-size:11px;color:#6b7280;">Accepted: `
+                     + h.examples.map(e=>`<code style="background:#0d1b2e;padding:1px 5px;border-radius:3px;color:#10b981;font-family:monospace;">${_escHtml(e)}</code>`).join(' ')
+                     + '</div>';
+            }
+            if (h.cmd) {
+                html += `<div style="margin-top:8px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#4b5563;margin-bottom:3px;">Prepare with:</div>`
+                     + h.cmd.split('\n').map(l=>`<div class="target-hint-cmd">${_escHtml(l)}</div>`).join('')
+                     + '</div>';
+            }
+            html += '</div></div>';
+            panel.innerHTML = html;
+            panel.style.display = 'block';
+
+            if (_targetType === 'file_upload' && h.accept) {
+                const fi = document.getElementById('fileInput');
+                if (fi) fi.setAttribute('accept', h.accept);
+            } else {
+                const fi = document.getElementById('fileInput');
+                if (fi) fi.removeAttribute('accept');
+            }
+        }
+
+        function detectTargetType(value) {
+            if (!value || _targetType !== 'auto') {
+                document.getElementById('autoDetectBadge').style.display = 'none'; return;
+            }
+            const v = value.trim();
+            if (v.startsWith('s3://')) _showAutoDetectBadge('s3','☁ S3 URI detected');
+            else if (/^https?:\/\/(github|gitlab|bitbucket)\.com\//i.test(v)) _showAutoDetectBadge('git','🔀 Git repo detected');
+            else if (/^https?:\/\//i.test(v)) _showAutoDetectBadge('public_url','🌐 URL detected');
+            else document.getElementById('autoDetectBadge').style.display = 'none';
+        }
+        function _showAutoDetectBadge(type, label) {
+            const b = document.getElementById('autoDetectBadge');
+            b.innerHTML = `${label} — <a style="color:#10b981;cursor:pointer;text-decoration:underline;" onclick="selectTargetType('${type}');document.getElementById('autoDetectBadge').style.display='none'">switch to ${type.replace('_',' ')}?</a>&nbsp;<span onclick="this.parentElement.style.display='none'" style="cursor:pointer;color:#6b7280;">✕</span>`;
+            b.style.display = 'block';
+        }
+
+        async function loadRecentUploads() {
+            const row = document.getElementById('recentUploadsRow');
+            if (!row) return;
+            try {
+                const res = await fetch(`${state.apiEndpoint}/uploads`);
+                const data = await res.json();
+                const ups = (data.uploads || []).slice(0, 8);
+                if (!ups.length) { row.style.display = 'none'; return; }
+                const sel = document.getElementById('recentUploadsPicker');
+                sel.innerHTML = ups.map(u=>`<option value="${_escHtml(u.id)}" data-label="${_escHtml(u.filename)}">${_escHtml(u.filename)} (${(u.size/1024).toFixed(0)} KB)</option>`).join('');
+                row.style.display = 'flex';
+            } catch { row.style.display = 'none'; }
+        }
+        function useRecentUpload() {
+            const sel = document.getElementById('recentUploadsPicker');
+            if (!sel?.value) return;
+            _uploadId = sel.value;
+            const label = sel.options[sel.selectedIndex]?.getAttribute('data-label') || sel.value;
+            document.getElementById('uploadFileName').textContent = label;
+            document.getElementById('uploadFileSize').textContent = '';
+            document.getElementById('uploadFileInfo').style.display = 'flex';
+            document.getElementById('dropzone').style.display = 'none';
+            document.getElementById('recentUploadsRow').style.display = 'none';
+            showToast(`Using: ${label}`, 'info');
+        }
+
+        function _renderPolicyDefaultTarget(dt) {
+            const opts = [['','(none)'],['auto','Auto'],['file_upload','📁 File Upload'],
+                          ['public_url','🌐 Public URL'],['private_url','🔒 Private URL'],
+                          ['s3','☁ S3'],['container','🐳 Container'],['git','🔀 Git']];
+            return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px;">
+              <div style="flex:1;min-width:120px;">
+                <div class="form-label" style="font-size:11px;">Type</div>
+                <select class="form-input" id="pol-dt-type" style="height:34px;font-size:12px;" onchange="_updatePolDtPlaceholder()">
+                  ${opts.map(([v,l])=>`<option value="${v}"${dt?.type===v?' selected':''}>${l}</option>`).join('')}
+                </select>
+              </div>
+              <div style="flex:2;min-width:180px;">
+                <div class="form-label" style="font-size:11px;">Value</div>
+                <div style="display:flex;gap:4px;">
+                  <input class="form-input" id="pol-dt-value" style="height:34px;font-size:12px;"
+                         value="${_escHtml(dt?.value||'')}" placeholder="Upload ID or URL">
+                  <button class="btn btn-secondary" style="padding:4px 8px;font-size:11px;white-space:nowrap;"
+                          onclick="_browsePolicyUploads()">Browse</button>
+                </div>
+              </div>
+            </div>
+            <div id="pol-dt-label" style="font-size:11px;color:#6b7280;">${dt?.label?'📎 '+_escHtml(dt.label):''}</div>`;
+        }
+        function _updatePolDtPlaceholder() {
+            const ph = {file_upload:'Upload ID (e.g. a1b2c3d4)',public_url:'https://example.com/app.zip',
+                         private_url:'https://internal/app.zip',s3:'s3://bucket/key',
+                         container:'nginx:latest',git:'https://github.com/org/repo',auto:'Any target'};
+            const inp = document.getElementById('pol-dt-value');
+            if (inp) inp.placeholder = ph[document.getElementById('pol-dt-type')?.value] || '';
+        }
+        async function _browsePolicyUploads() {
+            try {
+                const res = await fetch(`${state.apiEndpoint}/uploads`);
+                const data = await res.json();
+                const ups = data.uploads || [];
+                if (!ups.length) { showToast('No uploads yet — upload a file first in the Scanner tab', 'warning'); return; }
+                const u = ups[0];
+                document.getElementById('pol-dt-type').value = 'file_upload';
+                document.getElementById('pol-dt-value').value = u.id;
+                document.getElementById('pol-dt-label').textContent = '📎 '+u.filename+' (most recent upload selected)';
+                showToast(`Selected: ${u.filename}`, 'info');
+            } catch { showToast('Could not fetch uploads', 'error'); }
+        }
+
+        function applyPolicyTarget(dt) {
+            if (!dt?.type || !dt?.value) return;
+            selectTargetType(dt.type);
+            if (dt.type === 'file_upload') {
+                _uploadId = dt.value;
+                document.getElementById('uploadFileName').textContent = dt.label || dt.value;
+                document.getElementById('uploadFileSize').textContent = '';
+                document.getElementById('uploadFileInfo').style.display = 'flex';
+                document.getElementById('dropzone').style.display = 'none';
+            } else {
+                document.getElementById('scanTarget').value = dt.value;
+            }
+            showToast(`Target pre-filled from policy: ${dt.label||dt.value}`, 'info');
         }
 
         // ── Dashboard ──────────────────────────────────────────────

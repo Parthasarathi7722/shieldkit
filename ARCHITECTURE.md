@@ -16,6 +16,7 @@ graph TB
         SOC[SOC Analyst Chatbot]
         INFRA[Infrastructure]
         SET[Settings]
+        REP[Reports]
     end
 
     subgraph API["FastAPI Server — server.py"]
@@ -309,6 +310,98 @@ sequenceDiagram
     U->>API: POST /scan/sca\n{target, options: {severity, only_fixed}}
     Note over API: options merged from selected policy
     API-->>U: ScanResult
+```
+
+---
+
+## Target Resolver — Scan-Type-Aware Filtering
+
+```mermaid
+flowchart TD
+    A([User selects scan type]) --> B[selectScanType scanType]
+    B --> C[updateScanOptions]
+    B --> D[updateTargetForScanType scanType]
+
+    D --> E{scanType in\nSCAN_TYPE_TARGET_COMPAT?}
+    E -->|Yes| F[Filter target-type pills\nshow only compatible types]
+    E -->|No| F
+
+    F --> G{current _targetType\nstill compatible?}
+    G -->|Yes| H[updateTargetHint]
+    G -->|No| I[selectTargetType\ndefault for scan type]
+    I --> H
+
+    H --> J{TARGET_HINTS\nscan+target combo?}
+    J -->|Found| K[Render hint panel\nicon + tip + examples + cmd]
+    J -->|None| L[Hide hint panel]
+
+    K --> M{target type\n= file_upload?}
+    M -->|Yes| N[Set fileInput.accept\nto allowed extensions]
+    M -->|No| O[Remove accept filter]
+
+    subgraph COMPAT["Compatibility Matrix"]
+        C1[sbom / sca → all 7 types]
+        C2[container → auto/upload/container/url]
+        C3[url / dast → auto/public_url/private_url]
+        C4[iac → auto/upload/url/s3/git]
+        C5[full → auto/upload/container/git]
+    end
+```
+
+---
+
+## Target Resolver — Input Auto-Detection & Recent Uploads
+
+```mermaid
+flowchart TD
+    subgraph AUTO["Auto-Detection (oninput on #scanTarget)"]
+        A([User types in target field]) --> B{_targetType\n= 'auto'?}
+        B -->|No| Z[Hide badge]
+        B -->|Yes| C{Pattern match}
+        C -->|s3://...| D[Show badge:\n☁ S3 URI detected]
+        C -->|github.com / gitlab / bitbucket URL| E[Show badge:\n🔀 Git repo detected]
+        C -->|https?://...| F[Show badge:\n🌐 URL detected]
+        C -->|No match| Z
+        D & E & F --> G[One-click link:\nselectTargetType + hide badge]
+    end
+
+    subgraph RECENT["Recent Uploads Quick-Pick"]
+        H([selectTargetType file_upload\nor clearUpload]) --> I[loadRecentUploads\nGET /uploads]
+        I --> J{uploads.length > 0?}
+        J -->|No| K[Hide recentUploadsRow]
+        J -->|Yes| L[Populate recentUploadsPicker\nwith last 8 uploads]
+        L --> M([User clicks Use →])
+        M --> N[useRecentUpload\nset _uploadId\nshow uploadFileInfo\nhide dropzone + picker]
+    end
+```
+
+---
+
+## Policy Default Target — Save & Apply
+
+```mermaid
+sequenceDiagram
+    participant U as Browser UI
+    participant API as FastAPI /tools/policies/*
+    participant FS as data/tool_policies.json
+
+    Note over U: User opens policy editor → fills "Default Target" section
+
+    U->>U: _renderPolicyDefaultTarget(existing dt)
+    Note over U: Select type (Container), enter value (nginx:latest)
+
+    U->>API: POST /tools/policies/trivy\n{policy: {name, settings, defaultTarget: {type, value, label}}}
+    API->>FS: _save_tool_policies (defaultTarget persisted)
+    API-->>U: {status: "saved"}
+
+    Note over U: Later — user applies policy from Scanner tab
+
+    U->>U: applyPolicy(toolKey, policyName)
+    Note over U: Policy settings pre-fill scan options
+    U->>U: applyPolicyTarget(policy.defaultTarget)
+    U->>U: selectTargetType("container")
+    U->>U: scanTarget.value = "nginx:latest"
+    U-->>U: showToast "Target pre-filled from policy: nginx:latest"
 ```
 
 ---

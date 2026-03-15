@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
 from pydantic import BaseModel
 
@@ -28,6 +28,7 @@ from .models import (
 from .scanners import SBOMScanner, SCAScanner, ContainerScanner, URLScanner, IaCScanner, ZAPScanner, check_tool
 from .cloud import CloudManager
 from .logs import LogPipeline, LogStore
+from .targets import TargetResolver
 
 
 # ── Globals ──────────────────────────────────────────────────────
@@ -544,76 +545,248 @@ async def delete_tool_policy(tool_name: str, policy_name: str):
     return {"status": "deleted", "tool": tool_name, "policy_name": policy_name}
 
 
+# ── Upload Storage ───────────────────────────────────────────────
+
+_UPLOADS_DIR = Path(__file__).resolve().parent / "data" / "uploads"
+_UPLOADS_INDEX = _UPLOADS_DIR / "index.json"
+
+
+def _load_uploads_index() -> list[dict]:
+    if _UPLOADS_INDEX.exists():
+        try:
+            return json.loads(_UPLOADS_INDEX.read_text())
+        except Exception:
+            pass
+    return []
+
+
+def _save_uploads_index(entries: list[dict]) -> None:
+    _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    _UPLOADS_INDEX.write_text(json.dumps(entries, indent=2))
+
+
 # ── Scanning Endpoints ───────────────────────────────────────────
 
 class ScanReq(BaseModel):
     target: str
+    target_type: str = "auto"          # auto | file_upload | public_url | private_url | s3 | container | git | local_path
+    credentials: dict[str, Any] | None = None  # optional auth for private URL/git/s3
     options: dict[str, Any] = {}
+
+
+async def _resolve_target(req: ScanReq, scan_type: str):
+    """Resolve credentials (sk:// refs) then run TargetResolver."""
+    creds = req.credentials
+    if creds:
+        # Resolve named credential profile if specified
+        if creds.get("profile"):
+            profile_key = f"cred_profile_{creds['profile']}"
+            provider = get_provider()
+            raw = await provider.get(profile_key)
+            if raw:
+                try:
+                    creds = json.loads(raw)
+                except Exception:
+                    pass
+
+        # Resolve any remaining sk:// refs in credential values
+        has_refs = any(
+            is_secret_ref(v) for v in creds.values() if isinstance(v, str)
+        )
+        if has_refs:
+            creds = await resolve_config_dict(creds)
+
+    return await TargetResolver().resolve(req.target, req.target_type, creds, scan_type)
+
+
+@app.post("/scan/upload")
+async def upload_artifact(
+    file: UploadFile = File(...),
+    scan_type: str = Form(default=""),
+):
+    """Upload an artifact file for subsequent scanning. Returns upload_id."""
+    upload_id = str(uuid.uuid4())[:8]
+    upload_dir = _UPLOADS_DIR / upload_id
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = file.filename or "artifact"
+    dest = upload_dir / filename
+    content = await file.read()
+    dest.write_bytes(content)
+
+    entry = {
+        "id": upload_id,
+        "filename": filename,
+        "size": len(content),
+        "scan_type_hint": scan_type,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    entries = _load_uploads_index()
+    entries.insert(0, entry)
+    _save_uploads_index(entries)
+
+    return {
+        "upload_id": upload_id,
+        "filename": filename,
+        "size": len(content),
+        "url": f"/uploads/{upload_id}",
+    }
+
+
+@app.get("/uploads")
+async def list_uploads():
+    """List all uploaded artifacts."""
+    return {"uploads": _load_uploads_index()}
+
+
+@app.delete("/uploads/{upload_id}")
+async def delete_upload(upload_id: str):
+    """Delete an uploaded artifact."""
+    entries = _load_uploads_index()
+    entry = next((e for e in entries if e["id"] == upload_id), None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Upload not found")
+
+    upload_dir = _UPLOADS_DIR / upload_id
+    if upload_dir.exists():
+        shutil.rmtree(upload_dir)
+
+    entries = [e for e in entries if e["id"] != upload_id]
+    _save_uploads_index(entries)
+    return {"status": "deleted", "id": upload_id}
+
+
+# ── Credential Profiles ──────────────────────────────────────────
+
+_CRED_PROFILE_PREFIX = "cred_profile_"
+
+
+@app.get("/credentials/profiles")
+async def list_credential_profiles():
+    """List all stored credential profiles (stored as cred_profile_* secrets)."""
+    provider = get_provider()
+    all_keys = await provider.list_keys()
+    profiles = []
+    for key in all_keys:
+        if key.startswith(_CRED_PROFILE_PREFIX):
+            name = key[len(_CRED_PROFILE_PREFIX):]
+            profiles.append({"name": name, "key": key})
+    return {"profiles": profiles}
+
+
+class CredentialProfileReq(BaseModel):
+    name: str
+    type: str = "bearer"
+    token: str = ""
+    username: str = ""
+    password: str = ""
+    headers: dict = {}
+    access_key: str = ""
+    secret_key: str = ""
+    region: str = ""
+
+
+@app.post("/credentials/profiles")
+async def create_credential_profile(req: CredentialProfileReq):
+    """Store a named credential profile in the secrets manager."""
+    if not req.name:
+        raise HTTPException(status_code=400, detail="Profile name is required")
+    key = f"{_CRED_PROFILE_PREFIX}{req.name}"
+    value = json.dumps({
+        "type": req.type,
+        "token": req.token,
+        "username": req.username,
+        "password": req.password,
+        "headers": req.headers,
+        "access_key": req.access_key,
+        "secret_key": req.secret_key,
+        "region": req.region,
+    })
+    provider = get_provider()
+    await provider.set(key, value)
+    return {"status": "saved", "name": req.name, "key": key}
+
+
+@app.delete("/credentials/profiles/{name}")
+async def delete_credential_profile(name: str):
+    """Delete a named credential profile."""
+    key = f"{_CRED_PROFILE_PREFIX}{name}"
+    provider = get_provider()
+    keys = await provider.list_keys()
+    if key not in keys:
+        raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
+    await provider.delete(key)
+    return {"status": "deleted", "name": name}
 
 
 @app.post("/scan/sbom")
 async def scan_sbom(req: ScanReq):
     """Generate SBOM for a target (image, directory, archive)."""
     cfg = get_config()
-    scanner = SBOMScanner(cfg.syft_bin)
-    result = await scanner.run(req.target, mock=cfg.mock_mode, **req.options)
-
-    if _pipeline:
-        _store_scan_result(result.model_dump())
-
-    return result.model_dump()
+    local = await _resolve_target(req, "sbom")
+    try:
+        result = await SBOMScanner(cfg.syft_bin).run(local.path, mock=cfg.mock_mode, **req.options)
+        if _pipeline:
+            _store_scan_result(result.model_dump())
+        return result.model_dump()
+    finally:
+        local.cleanup()
 
 
 @app.post("/scan/sca")
 async def scan_sca(req: ScanReq):
     """Run SCA vulnerability scan on target."""
     cfg = get_config()
-    scanner = SCAScanner(cfg.grype_bin)
-    result = await scanner.run(req.target, mock=cfg.mock_mode, **req.options)
-
-    if _pipeline:
-        _store_scan_result(result.model_dump())
-
-    return result.model_dump()
+    local = await _resolve_target(req, "sca")
+    try:
+        result = await SCAScanner(cfg.grype_bin).run(local.path, mock=cfg.mock_mode, **req.options)
+        if _pipeline:
+            _store_scan_result(result.model_dump())
+        return result.model_dump()
+    finally:
+        local.cleanup()
 
 
 @app.post("/scan/container")
 async def scan_container(req: ScanReq):
     """Scan container image for vulnerabilities."""
     cfg = get_config()
-    scanner = ContainerScanner(cfg.trivy_bin)
-    result = await scanner.run(req.target, mock=cfg.mock_mode, **req.options)
-
-    if _pipeline:
-        _store_scan_result(result.model_dump())
-
-    return result.model_dump()
+    local = await _resolve_target(req, "container")
+    try:
+        result = await ContainerScanner(cfg.trivy_bin).run(local.path, mock=cfg.mock_mode, **req.options)
+        if _pipeline:
+            _store_scan_result(result.model_dump())
+        return result.model_dump()
+    finally:
+        local.cleanup()
 
 
 @app.post("/scan/url")
 async def scan_url(req: ScanReq):
     """Scan URL/endpoint for vulnerabilities using Nuclei templates."""
     cfg = get_config()
-    scanner = URLScanner(cfg.nuclei_bin)
-    result = await scanner.run(req.target, mock=cfg.mock_mode, **req.options)
-
-    if _pipeline:
-        _store_scan_result(result.model_dump())
-
-    return result.model_dump()
+    local = await _resolve_target(req, "url")
+    try:
+        result = await URLScanner(cfg.nuclei_bin).run(local.path, mock=cfg.mock_mode, **req.options)
+        if _pipeline:
+            _store_scan_result(result.model_dump())
+        return result.model_dump()
+    finally:
+        local.cleanup()
 
 
 @app.post("/scan/iac")
 async def scan_iac(req: ScanReq):
     """Scan Infrastructure as Code for misconfigurations."""
     cfg = get_config()
-    scanner = IaCScanner(cfg.checkov_bin)
-    result = await scanner.run(req.target, mock=cfg.mock_mode, **req.options)
-
-    if _pipeline:
-        _store_scan_result(result.model_dump())
-
-    return result.model_dump()
+    local = await _resolve_target(req, "iac")
+    try:
+        result = await IaCScanner(cfg.checkov_bin).run(local.path, mock=cfg.mock_mode, **req.options)
+        if _pipeline:
+            _store_scan_result(result.model_dump())
+        return result.model_dump()
+    finally:
+        local.cleanup()
 
 
 @app.post("/scan/full")
@@ -621,13 +794,16 @@ async def scan_full(req: ScanReq):
     """Run all applicable scans on target in parallel."""
     cfg = get_config()
     mock = cfg.mock_mode
-
-    results = await asyncio.gather(
-        SBOMScanner(cfg.syft_bin).run(req.target, mock=mock),
-        SCAScanner(cfg.grype_bin).run(req.target, mock=mock),
-        ContainerScanner(cfg.trivy_bin).run(req.target, mock=mock),
-        return_exceptions=True,
-    )
+    local = await _resolve_target(req, "sbom")
+    try:
+        results = await asyncio.gather(
+            SBOMScanner(cfg.syft_bin).run(local.path, mock=mock),
+            SCAScanner(cfg.grype_bin).run(local.path, mock=mock),
+            ContainerScanner(cfg.trivy_bin).run(local.path, mock=mock),
+            return_exceptions=True,
+        )
+    finally:
+        local.cleanup()
 
     output = {}
     for r in results:
@@ -641,6 +817,8 @@ async def scan_full(req: ScanReq):
 
 class ZAPScanReq(BaseModel):
     target: str
+    target_type: str = "auto"             # auto | public_url | private_url (URL-based; file_upload not applicable)
+    credentials: dict[str, Any] | None = None  # auth credentials for private URL resolution
     scan_mode: str = "baseline"           # baseline | full | api
     auth_method: str = "none"             # none | basic | form | bearer | script
     auth_config: dict[str, Any] = {}      # credentials specific to auth_method
@@ -660,9 +838,12 @@ class ZAPScanReq(BaseModel):
 async def scan_zap(req: ZAPScanReq):
     """Run OWASP ZAP DAST scan against a web application or API endpoint."""
     cfg = get_config()
+    # Resolve target (for ZAP, URLs are always passed through; credentials may inject auth headers)
+    _zap_req = ScanReq(target=req.target, target_type=req.target_type, credentials=req.credentials)
+    local = await _resolve_target(_zap_req, "zap")
     scanner = ZAPScanner()
     result = await scanner.run(
-        req.target,
+        local.path,
         mock=cfg.mock_mode,
         scan_mode=req.scan_mode,
         auth_method=req.auth_method,
