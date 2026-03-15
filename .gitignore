@@ -18,7 +18,7 @@ data/
 # Tools output
 scoutsuite-results/
 output/
-reports/
+data/reports/        # generated report files (not the reports/ Python module)
 
 # IDE
 .vscode/

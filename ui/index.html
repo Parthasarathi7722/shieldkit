@@ -1086,6 +1086,27 @@
         .secret-del-btn{padding:3px 10px;border-radius:4px;border:1px solid #374151;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;}
         .secret-del-btn:hover{border-color:#ef4444;color:#ef4444;}
         @media(max-width:900px){.infra-layout{grid-template-columns:1fr;}}
+
+        /* ── Reports Tab ─────────────────────────────────────────── */
+        .report-layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;}
+        .report-type-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+        .report-type-card{background:#111827;border:2px solid #1f2937;border-radius:8px;padding:12px 10px;cursor:pointer;text-align:center;transition:border-color .15s;}
+        .report-type-card:hover{border-color:#374151;}
+        .report-type-card.active{border-color:#22c55e;background:#052e16;}
+        .report-type-card .rtc-icon{font-size:20px;margin-bottom:4px;}
+        .report-type-card .rtc-label{font-size:11px;font-weight:600;color:#d1d5db;}
+        .report-format-btn{display:inline-block;padding:6px 14px;border-radius:20px;border:1px solid #374151;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;font-weight:600;margin-right:6px;transition:all .15s;}
+        .report-format-btn:hover{border-color:#6b7280;color:#e5e7eb;}
+        .report-format-btn.active{border-color:#22c55e;background:#052e16;color:#22c55e;}
+        .reports-list-table{width:100%;border-collapse:collapse;font-size:13px;}
+        .reports-list-table th{background:#1f2937;color:#9ca3af;text-align:left;padding:8px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+        .reports-list-table td{padding:9px 12px;border-bottom:1px solid #1f2937;color:#d1d5db;vertical-align:middle;}
+        .reports-list-table tr:hover td{background:#111827;}
+        .fmt-badge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
+        .fmt-pdf{background:#3b1616;color:#f87171;}
+        .fmt-csv{background:#0d3321;color:#4ade80;}
+        .fmt-html{background:#172554;color:#60a5fa;}
+        @media(max-width:1100px){.report-layout{grid-template-columns:1fr;}}
     </style>
 </head>
 <body>
@@ -1108,6 +1129,7 @@
             <div class="nav-section" style="margin-top: auto; padding-top: 24px; border-top: 1px solid #1f2937;">
                 <div class="nav-section-title">Settings</div>
                 <div class="nav-item" data-tab="infra">🔒 Infrastructure</div>
+                <div class="nav-item" data-tab="reports">📄 Reports</div>
                 <div class="nav-item" data-tab="settings">⚙️ Settings</div>
             </div>
         </div>
@@ -1861,6 +1883,110 @@
                   </div>
                 </div>
 
+                <!-- Reports Tab -->
+                <div id="reports" class="tab-content">
+                    <div class="report-layout">
+                        <!-- Left: Report Builder -->
+                        <div>
+                            <div class="card" style="margin-bottom:16px;">
+                                <div style="font-size:15px;font-weight:600;color:#f3f4f6;margin-bottom:14px;">Report Type</div>
+                                <div class="report-type-grid" id="reportTypeGrid">
+                                    <div class="report-type-card active" onclick="selectReportType('vulnerability')" data-rtype="vulnerability">
+                                        <div class="rtc-icon">🐛</div>
+                                        <div class="rtc-label">Vulnerability</div>
+                                    </div>
+                                    <div class="report-type-card" onclick="selectReportType('sbom')" data-rtype="sbom">
+                                        <div class="rtc-icon">📦</div>
+                                        <div class="rtc-label">SBOM</div>
+                                    </div>
+                                    <div class="report-type-card" onclick="selectReportType('cloud')" data-rtype="cloud">
+                                        <div class="rtc-icon">☁️</div>
+                                        <div class="rtc-label">Cloud</div>
+                                    </div>
+                                    <div class="report-type-card" onclick="selectReportType('executive')" data-rtype="executive">
+                                        <div class="rtc-icon">📊</div>
+                                        <div class="rtc-label">Executive</div>
+                                    </div>
+                                    <div class="report-type-card" onclick="selectReportType('full')" data-rtype="full">
+                                        <div class="rtc-icon">📋</div>
+                                        <div class="rtc-label">Full Report</div>
+                                    </div>
+                                </div>
+
+                                <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">Format</div>
+                                <div style="margin-bottom:16px;">
+                                    <button class="report-format-btn active" id="fmtPdf" onclick="selectReportFormat('pdf')">📄 PDF</button>
+                                    <button class="report-format-btn" id="fmtCsv" onclick="selectReportFormat('csv')">📊 CSV</button>
+                                    <button class="report-format-btn" id="fmtHtml" onclick="selectReportFormat('html')">🌐 HTML</button>
+                                </div>
+
+                                <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Custom Title (optional)</div>
+                                <input type="text" class="form-input" id="reportTitle" placeholder="e.g. Q1 2026 Security Review" style="margin-bottom:16px;">
+                            </div>
+
+                            <div class="card" style="margin-bottom:16px;">
+                                <div style="font-size:15px;font-weight:600;color:#f3f4f6;margin-bottom:14px;">Filters <span style="font-size:11px;color:#4b5563;font-weight:400;">(all optional)</span></div>
+
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                                    <div>
+                                        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">From Date</div>
+                                        <input type="date" class="form-input" id="filterDateFrom" style="font-size:12px;">
+                                    </div>
+                                    <div>
+                                        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">To Date</div>
+                                        <input type="date" class="form-input" id="filterDateTo" style="font-size:12px;">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom:12px;">
+                                    <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">Target (partial match)</div>
+                                    <input type="text" class="form-input" id="filterTarget" placeholder="e.g. nginx, s3://bucket" style="font-size:12px;">
+                                </div>
+
+                                <div style="margin-bottom:12px;">
+                                    <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Severity</div>
+                                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sevCritical" value="critical" style="accent-color:#dc2626;"> <span style="color:#f87171;">Critical</span></label>
+                                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sevHigh" value="high" style="accent-color:#f97316;"> <span style="color:#fb923c;">High</span></label>
+                                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sevMedium" value="medium" style="accent-color:#f59e0b;"> <span style="color:#fbbf24;">Medium</span></label>
+                                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sevLow" value="low" style="accent-color:#3b82f6;"> <span style="color:#60a5fa;">Low</span></label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">Scan Type</div>
+                                    <select class="form-input" id="filterScanType" style="font-size:12px;">
+                                        <option value="">All scan types</option>
+                                        <option value="sbom">SBOM</option>
+                                        <option value="sca">SCA</option>
+                                        <option value="container">Container</option>
+                                        <option value="url">URL</option>
+                                        <option value="iac">IaC</option>
+                                        <option value="dast">DAST</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="generateReport()">
+                                <span>⚡</span> <span>Generate Report</span>
+                            </button>
+                        </div>
+
+                        <!-- Right: Generated Reports -->
+                        <div>
+                            <div class="card">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                                    <div style="font-size:15px;font-weight:600;color:#f3f4f6;">Generated Reports</div>
+                                    <button class="btn btn-secondary btn-small" onclick="loadReportsList()">↻ Refresh</button>
+                                </div>
+                                <div id="reportsListContainer">
+                                    <div style="color:#4b5563;font-style:italic;text-align:center;padding:24px;">No reports generated yet.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Settings Tab -->
                 <div id="settings" class="tab-content">
                     <div class="card">
@@ -2361,12 +2487,14 @@
                 cicd: 'CI/CD Integration',
                 soc: 'SOC Analyst',
                 infra: 'Infrastructure',
+                reports: 'Reports',
                 settings: 'Settings'
             };
             document.getElementById('headerTitle').textContent = titleMap[tabName] || tabName;
             if (tabName === 'cicd') initCICDTab();
             if (tabName === 'soc') initSOCTab();
             if (tabName === 'infra') initInfraTab();
+            if (tabName === 'reports') initReportsTab();
         }
 
         function selectScanType(scanType) {
@@ -5317,6 +5445,145 @@ reports:
             <button class="quickkey-store-btn" onclick="storeQuickKey('${key}','${info.label.replace(/'/g,"\\'") }')">🔐 Store</button>
             <span style="font-size:11px;color:#4b5563;width:140px;text-align:right;flex-shrink:0;">${info.help}</span>`;
         }
+
+        // ── Reports Tab ────────────────────────────────────────────
+
+        let _reportType = 'vulnerability';
+        let _reportFormat = 'pdf';
+
+        function initReportsTab() {
+            loadReportsList();
+        }
+
+        function selectReportType(type) {
+            _reportType = type;
+            document.querySelectorAll('.report-type-card').forEach(c => {
+                c.classList.toggle('active', c.getAttribute('data-rtype') === type);
+            });
+        }
+
+        function selectReportFormat(fmt) {
+            _reportFormat = fmt;
+            ['pdf','csv','html'].forEach(f => {
+                const btn = document.getElementById('fmt' + f.charAt(0).toUpperCase() + f.slice(1));
+                if (btn) btn.classList.toggle('active', f === fmt);
+            });
+        }
+
+        async function generateReport() {
+            const filters = {};
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo   = document.getElementById('filterDateTo').value;
+            const target   = document.getElementById('filterTarget').value.trim();
+            const scanType = document.getElementById('filterScanType').value;
+            if (dateFrom) filters.date_from = dateFrom;
+            if (dateTo)   filters.date_to = dateTo;
+            if (target)   filters.target = target;
+            if (scanType) filters.scan_type = scanType;
+            const severities = ['critical','high','medium','low'].filter(s => {
+                const el = document.getElementById('sev' + s.charAt(0).toUpperCase() + s.slice(1));
+                return el && el.checked;
+            });
+            if (severities.length) filters.severity = severities;
+
+            const title = document.getElementById('reportTitle').value.trim();
+            const payload = { report_type: _reportType, format: _reportFormat, filters, title };
+
+            showToast('Generating report…', 'info');
+            try {
+                const base = document.getElementById('apiEndpoint')?.value || 'http://localhost:8000';
+                const resp = await fetch(`${base}/reports/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    showToast('Report generation failed: ' + (err.detail || resp.status), 'error');
+                    return;
+                }
+                const data = await resp.json();
+                showToast(`Report created (${_humanSize(data.size)}) — downloading…`, 'success');
+                downloadReport(data.id, data.filename);
+                loadReportsList();
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function loadReportsList() {
+            const container = document.getElementById('reportsListContainer');
+            if (!container) return;
+            try {
+                const base = document.getElementById('apiEndpoint')?.value || 'http://localhost:8000';
+                const resp = await fetch(`${base}/reports`);
+                if (!resp.ok) { container.innerHTML = '<div style="color:#ef4444;padding:12px;">Failed to load reports.</div>'; return; }
+                const data = await resp.json();
+                const reports = data.reports || [];
+                if (!reports.length) {
+                    container.innerHTML = '<div style="color:#4b5563;font-style:italic;text-align:center;padding:24px;">No reports generated yet.</div>';
+                    return;
+                }
+                const rows = reports.map(r => `
+                    <tr>
+                        <td>${_escHtml(r.title || r.filename)}</td>
+                        <td>${_escHtml(r.type)}</td>
+                        <td><span class="fmt-badge fmt-${r.format}">${r.format.toUpperCase()}</span></td>
+                        <td style="font-size:11px;color:#9ca3af;">${r.created_at ? r.created_at.replace('T',' ').slice(0,16) : ''}</td>
+                        <td style="font-size:11px;color:#9ca3af;">${_humanSize(r.size)}</td>
+                        <td>
+                            <button class="btn btn-secondary btn-small" onclick="downloadReport('${r.id}','${_escHtml(r.filename)}')">⬇</button>
+                            <button class="btn btn-secondary btn-small" style="margin-left:4px;color:#ef4444;" onclick="deleteReport('${r.id}')">🗑</button>
+                        </td>
+                    </tr>`).join('');
+                container.innerHTML = `<table class="reports-list-table">
+                    <thead><tr><th>Title</th><th>Type</th><th>Format</th><th>Date</th><th>Size</th><th>Actions</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+            } catch(e) {
+                container.innerHTML = '<div style="color:#ef4444;padding:12px;">Error loading reports: ' + _escHtml(e.message) + '</div>';
+            }
+        }
+
+        function downloadReport(id, filename) {
+            const base = document.getElementById('apiEndpoint')?.value || 'http://localhost:8000';
+            const a = document.createElement('a');
+            a.href = `${base}/reports/${id}/download`;
+            a.download = filename || `report_${id}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function deleteReport(id) {
+            if (!confirm('Delete this report?')) return;
+            try {
+                const base = document.getElementById('apiEndpoint')?.value || 'http://localhost:8000';
+                const resp = await fetch(`${base}/reports/${id}`, { method: 'DELETE' });
+                if (resp.ok) {
+                    showToast('Report deleted', 'success');
+                    loadReportsList();
+                } else {
+                    showToast('Delete failed', 'error');
+                }
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function _humanSize(bytes) {
+            if (!bytes) return '0 B';
+            const units = ['B','KB','MB','GB'];
+            let i = 0; let v = bytes;
+            while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+            return v.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+        }
+
+        function _escHtml(str) {
+            return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Dashboard ──────────────────────────────────────────────
 
         function loadDashboardData() {
             document.getElementById('dashTotalScans').textContent = state.dashboardStats.totalScans;

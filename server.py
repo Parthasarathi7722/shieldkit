@@ -10,13 +10,14 @@ import json
 import os
 import shlex
 import shutil
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
 from pydantic import BaseModel
 
 from .config import get_config
@@ -1395,6 +1396,124 @@ async def _execute_chat_tool(name: str, args: dict) -> str:
         return json.dumps({"error": f"Unknown tool: {name}"})
     except Exception as exc:
         return json.dumps({"error": str(exc), "tool": name})
+
+
+class ReportRequest(BaseModel):
+    report_type: str = "vulnerability"  # vulnerability|sbom|cloud|executive|full
+    format: str = "pdf"                 # pdf|csv|html
+    filters: dict = {}
+    title: str = ""
+
+
+# ── Reports ───────────────────────────────────────────────────────
+
+_REPORTS_DIR = Path(__file__).resolve().parent / "data" / "reports"
+_REPORTS_INDEX = _REPORTS_DIR / "index.json"
+
+
+def _load_reports_index() -> list[dict]:
+    if _REPORTS_INDEX.exists():
+        try:
+            return json.loads(_REPORTS_INDEX.read_text())
+        except Exception:
+            pass
+    return []
+
+
+def _save_reports_index(entries: list[dict]) -> None:
+    _REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    _REPORTS_INDEX.write_text(json.dumps(entries, indent=2))
+
+
+@app.post("/reports/generate")
+async def generate_report(req: ReportRequest):
+    """Generate a report and save it to data/reports/."""
+    if not _pipeline:
+        raise HTTPException(status_code=503, detail="Log store not initialised")
+
+    valid_types = {"vulnerability", "sbom", "cloud", "executive", "full"}
+    valid_fmts = {"pdf", "csv", "html"}
+    if req.report_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid report_type. Choose from: {valid_types}")
+    if req.format not in valid_fmts:
+        raise HTTPException(status_code=400, detail=f"Invalid format. Choose from: {valid_fmts}")
+
+    from .reports import ReportGenerator
+    gen = ReportGenerator(_pipeline.store.conn)
+
+    filename, content = gen.generate(req.report_type, req.format, req.filters, req.title)
+
+    report_id = str(uuid.uuid4())[:8]
+    _REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = _REPORTS_DIR / f"{report_id}.{req.format}"
+    out_path.write_bytes(content)
+
+    title_str = req.title or filename
+    entry = {
+        "id": report_id,
+        "title": title_str,
+        "type": req.report_type,
+        "format": req.format,
+        "size": len(content),
+        "created_at": datetime.utcnow().isoformat(),
+        "filename": filename,
+    }
+    entries = _load_reports_index()
+    entries.insert(0, entry)
+    _save_reports_index(entries)
+
+    return {
+        "id": report_id,
+        "filename": filename,
+        "url": f"/reports/{report_id}/download",
+        "size": len(content),
+    }
+
+
+@app.get("/reports")
+async def list_reports():
+    """List all generated reports."""
+    return {"reports": _load_reports_index()}
+
+
+@app.get("/reports/{report_id}/download")
+async def download_report(report_id: str):
+    """Download a previously generated report."""
+    entries = _load_reports_index()
+    entry = next((e for e in entries if e["id"] == report_id), None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    fmt = entry.get("format", "pdf")
+    file_path = _REPORTS_DIR / f"{report_id}.{fmt}"
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Report file missing")
+
+    media_types = {"pdf": "application/pdf", "csv": "text/csv", "html": "text/html"}
+    media_type = media_types.get(fmt, "application/octet-stream")
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_type,
+        filename=entry.get("filename", file_path.name),
+    )
+
+
+@app.delete("/reports/{report_id}")
+async def delete_report(report_id: str):
+    """Delete a report file and remove it from the index."""
+    entries = _load_reports_index()
+    entry = next((e for e in entries if e["id"] == report_id), None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    fmt = entry.get("format", "pdf")
+    file_path = _REPORTS_DIR / f"{report_id}.{fmt}"
+    if file_path.exists():
+        file_path.unlink()
+
+    entries = [e for e in entries if e["id"] != report_id]
+    _save_reports_index(entries)
+    return {"status": "deleted", "id": report_id}
 
 
 class ChatMessage(BaseModel):
