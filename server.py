@@ -33,17 +33,44 @@ from .logs import LogPipeline, LogStore
 
 _pipeline: LogPipeline | None = None
 _cloud: CloudManager | None = None
+_s3_sync = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _pipeline, _cloud
+    global _pipeline, _cloud, _s3_sync
     cfg = get_config()
-    store = LogStore(cfg.duckdb_path)
+
+    # Resolve DB connection string (handles local / MotherDuck / S3 / Postgres)
+    from .db_backends import load_db_config, get_connection_string, S3SyncManager
+    db_cfg = load_db_config()
+    backend = db_cfg.get("backend", "local")
+
+    # S3 sync: pull latest DB file before connecting
+    _s3_sync = None
+    if backend == "s3_sync":
+        _s3_sync = S3SyncManager(db_cfg)
+        result = _s3_sync.download()
+        print(f"[DB] S3 sync download: {result}")
+
+    try:
+        conn_str = get_connection_string(db_cfg)
+    except Exception as e:
+        print(f"[DB] Backend config error: {e} — falling back to local file")
+        conn_str = cfg.duckdb_path
+
+    store = LogStore(conn_str)
     _pipeline = LogPipeline(store)
     _cloud = CloudManager(cfg.prowler_bin, cfg.scoutsuite_bin)
     yield
-    if _pipeline:
+
+    # S3 sync: push DB file on clean shutdown
+    if _s3_sync:
+        if _pipeline:
+            _pipeline.close()
+        result = _s3_sync.upload()
+        print(f"[DB] S3 sync upload on shutdown: {result}")
+    elif _pipeline:
         _pipeline.close()
 
 
@@ -187,12 +214,22 @@ async def save_tool_config(tool_name: str, req: ToolConfigReq):
     configs[tool_name] = req.config
     _save_tool_configs(configs)
 
-    # Apply to current environment (session-level)
-    for key, value in req.config.items():
+    # Apply to current environment (session-level), resolving sk:// references
+    provider = get_provider()
+    has_refs = any(is_secret_ref(v) for v in req.config.values() if isinstance(v, str))
+    if has_refs:
+        try:
+            resolved = await resolve_config_dict(req.config, provider)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Secret resolution failed: {e}")
+    else:
+        resolved = req.config
+
+    for key, value in resolved.items():
         if isinstance(value, str):
             os.environ[key] = value
 
-    return {"status": "saved", "tool": tool_name, "config": req.config}
+    return {"status": "saved", "tool": tool_name, "config": req.config, "refs_resolved": has_refs}
 
 
 class ToolInstallReq(BaseModel):
@@ -263,6 +300,202 @@ async def get_tool_registry():
     if reg.exists():
         return json.loads(reg.read_text())
     return {"tools": cfg.tool_registry, "tiers": {}}
+
+
+# ── Secrets Manager Endpoints ────────────────────────────────────
+
+from .secrets_manager import (
+    get_provider, invalidate_provider_cache,
+    load_secrets_config, save_secrets_config,
+    resolve_config_dict, is_secret_ref,
+    PROVIDER_METADATA, SK_REF_PREFIX,
+)
+from .db_backends import (
+    load_db_config, save_db_config, get_connection_string,
+    test_db_connection, S3SyncManager, BACKEND_METADATA,
+)
+
+
+@app.get("/secrets/providers")
+async def list_secrets_providers():
+    """Return all supported secrets provider types with their UI field definitions."""
+    return {"providers": PROVIDER_METADATA}
+
+
+@app.get("/secrets/config")
+async def get_secrets_config():
+    """Return current secrets provider config (tokens/keys masked)."""
+    cfg = load_secrets_config()
+    # Mask any token/key values
+    safe = {k: ("***" if any(s in k.lower() for s in ("token", "key", "password", "secret")) else v)
+            for k, v in cfg.items()}
+    return {"config": safe}
+
+
+class SecretsConfigReq(BaseModel):
+    config: dict[str, Any]
+
+
+@app.post("/secrets/config")
+async def save_secrets_config_endpoint(req: SecretsConfigReq):
+    """Save and activate secrets provider configuration."""
+    save_secrets_config(req.config)
+    invalidate_provider_cache()
+    # Merge sensitive fields into environment (not persisted to file)
+    for k, v in req.config.items():
+        if v and v != "***":
+            os.environ[k.upper()] = v
+    return {"status": "saved", "provider": req.config.get("provider", "local_encrypted")}
+
+
+@app.post("/secrets/test")
+async def test_secrets_provider(req: SecretsConfigReq):
+    """Test connectivity to the configured secrets provider."""
+    try:
+        from .secrets_manager import _build_provider
+        provider = _build_provider(req.config)
+        result = await provider.test()
+        return result
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+class SecretSetReq(BaseModel):
+    key: str
+    value: str
+
+
+@app.post("/secrets/set")
+async def set_secret(req: SecretSetReq):
+    """Store a secret in the active provider."""
+    try:
+        provider = get_provider()
+        await provider.set(req.key, req.value)
+        return {"status": "stored", "key": req.key, "ref": f"{SK_REF_PREFIX}{req.key}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/secrets/list")
+async def list_secrets():
+    """List secret key names (never values) from the active provider."""
+    try:
+        provider = get_provider()
+        keys = await provider.list_keys()
+        refs = [f"{SK_REF_PREFIX}{k}" for k in keys]
+        return {"keys": keys, "refs": refs, "count": len(keys)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/secrets/{key:path}")
+async def delete_secret(key: str):
+    """Delete a secret from the active provider."""
+    try:
+        provider = get_provider()
+        await provider.delete(key)
+        return {"status": "deleted", "key": key}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/secrets/resolve")
+async def resolve_secret_ref(req: SecretSetReq):
+    """Resolve a sk:// reference and return the plaintext value (for debugging/CI)."""
+    if not is_secret_ref(req.key):
+        raise HTTPException(status_code=400, detail="Value must start with sk://")
+    try:
+        from .secrets_manager import resolve_ref
+        value = await resolve_ref(req.key)
+        return {"resolved": True, "key": req.key[len(SK_REF_PREFIX):], "value": value}
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ── Database Backend Endpoints ────────────────────────────────────
+
+@app.get("/db/backends")
+async def list_db_backends():
+    """Return all supported database backend types with UI field definitions."""
+    return {"backends": BACKEND_METADATA}
+
+
+@app.get("/db/config")
+async def get_db_config():
+    """Return current database backend configuration."""
+    cfg = load_db_config()
+    safe = {k: ("***" if any(s in k.lower() for s in ("token", "password", "url")) else v)
+            for k, v in cfg.items()}
+    return {"config": safe}
+
+
+class DBConfigReq(BaseModel):
+    config: dict[str, Any]
+
+
+@app.post("/db/config")
+async def save_db_config_endpoint(req: DBConfigReq):
+    """Save database backend configuration. Requires server restart to take effect."""
+    save_db_config(req.config)
+    # Store sensitive values in environment
+    for k, v in req.config.items():
+        if v and v != "***":
+            os.environ[k.upper()] = str(v)
+    return {
+        "status": "saved",
+        "backend": req.config.get("backend", "local"),
+        "note": "Restart the server to apply the new database backend.",
+    }
+
+
+@app.post("/db/test")
+async def test_db_backend(req: DBConfigReq):
+    """Test connectivity to the configured database backend."""
+    try:
+        result = await test_db_connection(req.config)
+        return result
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/db/sync")
+async def sync_db_to_s3():
+    """Manually trigger an S3 sync upload (S3 backend only)."""
+    cfg = load_db_config()
+    if cfg.get("backend") != "s3_sync":
+        raise HTTPException(status_code=400, detail="S3 sync is not the active backend")
+    result = S3SyncManager(cfg).upload()
+    return result
+
+
+@app.get("/db/status")
+async def db_status():
+    """Return current database connection info and stats."""
+    cfg = load_db_config()
+    backend = cfg.get("backend", "local")
+    try:
+        if _pipeline and _pipeline.store and _pipeline.store.conn:
+            row = _pipeline.store.conn.execute(
+                "SELECT COUNT(*) FROM logs"
+            ).fetchone()
+            log_count = row[0] if row else 0
+            scan_row = _pipeline.store.conn.execute(
+                "SELECT COUNT(*) FROM scan_results"
+            ).fetchone()
+            scan_count = scan_row[0] if scan_row else 0
+        else:
+            log_count = scan_count = 0
+    except Exception:
+        log_count = scan_count = 0
+
+    return {
+        "backend": backend,
+        "connected": _pipeline is not None,
+        "log_count": log_count,
+        "scan_count": scan_count,
+        "motherduck": backend == "motherduck",
+        "s3_sync": backend == "s3_sync",
+    }
 
 
 # ── Policy Endpoints ──────────────────────────────────────────────
@@ -937,3 +1170,434 @@ def _store_cloud_findings(data: dict):
             ])
     except Exception:
         pass
+
+
+# ── SOC Analyst Chatbot ──────────────────────────────────────────
+
+_CHAT_TOOLS = [
+    {
+        "name": "shieldkit_sbom",
+        "description": "Generate a Software Bill of Materials (SBOM) for a container image, directory, or archive.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "Image (e.g. nginx:latest), directory path, or archive"},
+                "format": {"type": "string", "enum": ["cyclonedx-json", "spdx-json"], "default": "cyclonedx-json"},
+            },
+            "required": ["target"],
+        },
+    },
+    {
+        "name": "shieldkit_sca",
+        "description": "Run Software Composition Analysis — scan for known CVEs in dependencies. Returns vulnerabilities with severity, CVSS, and fix versions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "Image, directory, or SBOM file"},
+                "severity": {"type": "string", "description": "Filter: critical,high,medium,low", "default": ""},
+            },
+            "required": ["target"],
+        },
+    },
+    {
+        "name": "shieldkit_container",
+        "description": "Scan a container image for OS and application vulnerabilities using Trivy.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "Container image (e.g. nginx:latest)"},
+                "severity": {"type": "string", "description": "Filter: CRITICAL,HIGH,MEDIUM,LOW", "default": ""},
+            },
+            "required": ["target"],
+        },
+    },
+    {
+        "name": "shieldkit_iac",
+        "description": "Scan Infrastructure as Code files for misconfigurations (Checkov). Supports Terraform, CloudFormation, Kubernetes, Dockerfiles.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "Path to IaC directory or file"},
+                "framework": {"type": "string", "description": "Framework: terraform, cloudformation, kubernetes, dockerfile, helm", "default": ""},
+            },
+            "required": ["target"],
+        },
+    },
+    {
+        "name": "shieldkit_dast",
+        "description": "Run DAST (Dynamic Application Security Testing) against a web app using OWASP ZAP.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "Target URL (e.g. https://example.com)"},
+                "scan_mode": {"type": "string", "enum": ["baseline", "full", "api"], "default": "baseline"},
+                "auth_method": {"type": "string", "enum": ["none", "basic", "form", "bearer"], "default": "none"},
+            },
+            "required": ["target"],
+        },
+    },
+    {
+        "name": "shieldkit_cloud",
+        "description": "Cloud security posture assessment against CIS, SOC2, PCI-DSS. Supports AWS, Azure, GCP.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "provider": {"type": "string", "enum": ["aws", "azure", "gcp"]},
+                "tool": {"type": "string", "enum": ["prowler", "scoutsuite"], "default": "prowler"},
+                "compliance": {"type": "array", "items": {"type": "string"}, "description": "Frameworks: cis, soc2, pci-dss"},
+            },
+            "required": ["provider"],
+        },
+    },
+    {
+        "name": "shieldkit_log_query",
+        "description": "Query security logs in ShieldKit's DuckDB store. Supports SQL or structured search.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "sql": {"type": "string", "description": "Raw SQL (e.g. SELECT * FROM logs WHERE severity='critical')"},
+                "source": {"type": "string", "description": "Log source: cloudtrail, syslog, vpc-flow"},
+                "severity": {"type": "string", "description": "critical, high, medium, low, info"},
+                "actor": {"type": "string", "description": "Actor/user to filter by"},
+                "source_ip": {"type": "string", "description": "Source IP to filter by"},
+                "keyword": {"type": "string", "description": "Keyword search"},
+                "limit": {"type": "integer", "default": 50},
+            },
+        },
+    },
+    {
+        "name": "shieldkit_log_stats",
+        "description": "Get aggregate log statistics: total count, sources, severity distribution, top actors, top IPs.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "shieldkit_scan_history",
+        "description": "Retrieve recent scan history with results and summaries.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "default": 10, "description": "Number of recent scans to return"},
+                "scan_type": {"type": "string", "description": "Filter by type: sbom, sca, container, iac, dast, cloud"},
+            },
+        },
+    },
+]
+
+_CHAT_SYSTEM_PROMPT = """You are ShieldKit SOC Analyst — an expert AI security analyst embedded in the ShieldKit DevSecOps platform.
+
+You have direct access to ShieldKit's scanning and investigation tools:
+- SBOM generation (software bill of materials)
+- SCA/CVE scanning (dependency vulnerabilities)
+- Container image scanning
+- IaC misconfiguration detection
+- DAST web app scanning (OWASP ZAP)
+- Cloud posture assessment (AWS/Azure/GCP)
+- Security log querying and analytics
+
+Your role:
+1. Answer security questions and guide threat investigations
+2. Run scans when the user asks you to check something
+3. Interpret scan results and prioritize findings by risk
+4. Generate incident reports and remediation guidance
+5. Correlate findings across scan types for complete risk picture
+
+Always be concise, actionable, and prioritize by severity. When running scans, explain what you found and what to do next. Format findings as clear bullet points. Use emojis sparingly for status indicators (✅ 🔴 🟠 🟡)."""
+
+
+async def _execute_chat_tool(name: str, args: dict) -> str:
+    """Execute a ShieldKit tool and return JSON string result."""
+    cfg = get_config()
+    mock = cfg.mock_mode
+    try:
+        if name == "shieldkit_sbom":
+            target = args.pop("target")
+            scanner = SBOMScanner(cfg.syft_bin)
+            result = await scanner.run(target, mock=mock, **args)
+            if _pipeline:
+                _store_scan_result(result.model_dump())
+            return json.dumps(result.model_dump(), default=str)
+
+        elif name == "shieldkit_sca":
+            target = args.pop("target")
+            scanner = SCAScanner(cfg.grype_bin)
+            result = await scanner.run(target, mock=mock, **args)
+            if _pipeline:
+                _store_scan_result(result.model_dump())
+            return json.dumps(result.model_dump(), default=str)
+
+        elif name == "shieldkit_container":
+            target = args.pop("target")
+            scanner = ContainerScanner(cfg.trivy_bin)
+            result = await scanner.run(target, mock=mock, **args)
+            if _pipeline:
+                _store_scan_result(result.model_dump())
+            return json.dumps(result.model_dump(), default=str)
+
+        elif name == "shieldkit_iac":
+            target = args.pop("target")
+            scanner = IaCScanner(cfg.checkov_bin)
+            result = await scanner.run(target, mock=mock, **args)
+            if _pipeline:
+                _store_scan_result(result.model_dump())
+            return json.dumps(result.model_dump(), default=str)
+
+        elif name == "shieldkit_dast":
+            target = args.pop("target")
+            scanner = ZAPScanner(cfg.zap_host, cfg.zap_port, cfg.zap_api_key, cfg.zap_use_docker)
+            result = await scanner.run(target, mock=mock, **args)
+            if _pipeline:
+                _store_scan_result(result.model_dump())
+            return json.dumps(result.model_dump(), default=str)
+
+        elif name == "shieldkit_cloud":
+            provider = CloudProvider(args.get("provider", "aws"))
+            result = await _cloud.scan(
+                provider,
+                tool=args.get("tool", "prowler"),
+                services=args.get("services"),
+                compliance=args.get("compliance"),
+                mock=mock,
+            )
+            if _pipeline:
+                _store_cloud_findings(result.model_dump())
+            return json.dumps(result.model_dump(), default=str)
+
+        elif name == "shieldkit_log_query":
+            if not _pipeline:
+                return json.dumps({"error": "Log pipeline not initialized"})
+            if args.get("sql"):
+                results = _pipeline.query(args["sql"], args.get("limit", 50))
+            else:
+                results = _pipeline.search(**{k: v for k, v in args.items() if k != "sql" and v})
+            return json.dumps({"results": results}, default=str)
+
+        elif name == "shieldkit_log_stats":
+            if not _pipeline:
+                return json.dumps({"error": "Log pipeline not initialized"})
+            return json.dumps(_pipeline.stats().model_dump(), default=str)
+
+        elif name == "shieldkit_scan_history":
+            limit = args.get("limit", 10)
+            scan_type = args.get("scan_type")
+            params: dict[str, Any] = {"limit": limit}
+            if scan_type:
+                params["scan_type"] = scan_type
+            # Return from in-memory store or recent scans list
+            try:
+                rows = _pipeline.store.conn.execute(
+                    "SELECT * FROM scans ORDER BY created_at DESC LIMIT ?", [limit]
+                ).fetchall()
+                cols = [d[0] for d in _pipeline.store.conn.description]
+                return json.dumps({"scans": [dict(zip(cols, r)) for r in rows]}, default=str)
+            except Exception as e:
+                return json.dumps({"scans": [], "note": str(e)})
+
+        return json.dumps({"error": f"Unknown tool: {name}"})
+    except Exception as exc:
+        return json.dumps({"error": str(exc), "tool": name})
+
+
+class ChatMessage(BaseModel):
+    role: str  # user | assistant
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage]
+    api_key: Optional[str] = None  # Override ANTHROPIC_API_KEY if provided
+
+
+@app.post("/chat")
+async def chat(req: ChatRequest):
+    """SOC Analyst chat — single turn, returns full response with tool results."""
+    import anthropic
+
+    api_key = req.api_key or os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="ANTHROPIC_API_KEY not set. Provide it in Settings or set env var.")
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        messages = [{"role": m.role, "content": m.content} for m in req.messages]
+
+        # Agentic loop — keep calling until no more tool_use
+        max_iterations = 8
+        tool_calls_made: list[dict] = []
+
+        for _ in range(max_iterations):
+            response = client.messages.create(
+                model="claude-opus-4-6",
+                max_tokens=4096,
+                system=_CHAT_SYSTEM_PROMPT,
+                tools=_CHAT_TOOLS,
+                messages=messages,
+            )
+
+            # Collect assistant message
+            assistant_content = response.content
+            messages.append({"role": "assistant", "content": assistant_content})
+
+            if response.stop_reason != "tool_use":
+                break
+
+            # Execute tool calls
+            tool_results = []
+            for block in assistant_content:
+                if block.type == "tool_use":
+                    tool_calls_made.append({"name": block.name, "input": block.input})
+                    result_text = await _execute_chat_tool(block.name, dict(block.input))
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": result_text,
+                    })
+
+            messages.append({"role": "user", "content": tool_results})
+
+        # Extract final text response
+        final_text = ""
+        for block in response.content:
+            if hasattr(block, "text"):
+                final_text += block.text
+
+        return {
+            "response": final_text,
+            "tool_calls": tool_calls_made,
+            "usage": {"input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens},
+        }
+    except anthropic.AuthenticationError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid Anthropic API key. Check Settings → SOC Analyst API Key. ({e})")
+    except anthropic.APIConnectionError as e:
+        raise HTTPException(status_code=503, detail=f"Cannot reach Anthropic API: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat error: {e}")
+
+
+@app.websocket("/chat/ws")
+async def chat_ws(websocket: WebSocket):
+    """Streaming SOC Analyst chat via WebSocket. Each message: {type, content/tool/text}."""
+    import anthropic
+
+    await websocket.accept()
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            data = json.loads(raw)
+            msg_type = data.get("type", "chat")
+
+            if msg_type == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+                continue
+
+            api_key = data.get("api_key") or os.environ.get("ANTHROPIC_API_KEY", "")
+            if not api_key:
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "content": "ANTHROPIC_API_KEY not configured. Add it in Settings → SOC Analyst API Key.",
+                }))
+                continue
+
+            messages = data.get("messages", [])
+            client = anthropic.Anthropic(api_key=api_key)
+
+            # Agentic loop with streaming
+            max_iterations = 8
+            for iteration in range(max_iterations):
+                # Stream the response
+                full_text = ""
+                tool_uses = []
+
+                with client.messages.stream(
+                    model="claude-opus-4-6",
+                    max_tokens=4096,
+                    system=_CHAT_SYSTEM_PROMPT,
+                    tools=_CHAT_TOOLS,
+                    messages=messages,
+                ) as stream:
+                    current_tool: dict | None = None
+                    current_tool_input = ""
+                    stop_reason = None
+
+                    for event in stream:
+                        etype = type(event).__name__
+
+                        if etype == "RawMessageStartEvent":
+                            pass
+                        elif etype == "RawContentBlockStartEvent":
+                            block = event.content_block
+                            if block.type == "text":
+                                current_tool = None
+                            elif block.type == "tool_use":
+                                current_tool = {"id": block.id, "name": block.name, "input": ""}
+                                current_tool_input = ""
+                                await websocket.send_text(json.dumps({
+                                    "type": "tool_start",
+                                    "tool": block.name,
+                                }))
+                        elif etype == "RawContentBlockDeltaEvent":
+                            delta = event.delta
+                            if delta.type == "text_delta":
+                                full_text += delta.text
+                                await websocket.send_text(json.dumps({
+                                    "type": "text_delta",
+                                    "text": delta.text,
+                                }))
+                            elif delta.type == "input_json_delta":
+                                current_tool_input += delta.partial_json
+                        elif etype == "RawContentBlockStopEvent":
+                            if current_tool:
+                                try:
+                                    current_tool["input"] = json.loads(current_tool_input) if current_tool_input else {}
+                                except Exception:
+                                    current_tool["input"] = {}
+                                tool_uses.append(current_tool)
+                                current_tool = None
+                                current_tool_input = ""
+                        elif etype == "RawMessageDeltaEvent":
+                            if hasattr(event.delta, "stop_reason"):
+                                stop_reason = event.delta.stop_reason
+
+                # Append assistant message to history
+                assistant_msg = stream.get_final_message()
+                messages.append({"role": "assistant", "content": assistant_msg.content})
+                stop_reason = assistant_msg.stop_reason
+
+                if stop_reason != "tool_use" or not tool_uses:
+                    break
+
+                # Execute tools and send results
+                tool_results = []
+                for tu in tool_uses:
+                    await websocket.send_text(json.dumps({
+                        "type": "tool_running",
+                        "tool": tu["name"],
+                        "input": tu["input"],
+                    }))
+                    result_text = await _execute_chat_tool(tu["name"], dict(tu["input"]))
+                    try:
+                        result_preview = json.loads(result_text)
+                        summary = result_preview.get("summary") or result_preview.get("status") or "done"
+                    except Exception:
+                        summary = "done"
+                    await websocket.send_text(json.dumps({
+                        "type": "tool_result",
+                        "tool": tu["name"],
+                        "summary": str(summary),
+                    }))
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": tu["id"],
+                        "content": result_text,
+                    })
+
+                messages.append({"role": "user", "content": tool_results})
+
+            await websocket.send_text(json.dumps({"type": "done"}))
+
+    except WebSocketDisconnect:
+        pass
+    except Exception as exc:
+        try:
+            await websocket.send_text(json.dumps({"type": "error", "content": str(exc)}))
+        except Exception:
+            pass

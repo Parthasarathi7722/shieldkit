@@ -65,6 +65,27 @@ class Config:
     zap_api_key: str = ""
     zap_use_docker: bool = True
 
+    # ── Secrets Provider ─────────────────────────────────────────
+    secrets_provider: str = "local_encrypted"  # local_encrypted|hashicorp_vault|aws_secrets|azure_keyvault|gcp_secret
+    secrets_master_key: str = ""               # SHIELDKIT_MASTER_KEY (for local_encrypted)
+    vault_addr: str = ""                       # VAULT_ADDR
+    vault_token: str = ""                      # VAULT_TOKEN
+    vault_mount: str = "secret"               # VAULT_MOUNT
+    vault_path_prefix: str = "shieldkit"      # VAULT_PATH_PREFIX
+    aws_sm_region: str = ""                    # AWS_SM_REGION
+    aws_sm_prefix: str = "shieldkit/"         # AWS_SM_PREFIX
+    azure_vault_url: str = ""                  # AZURE_VAULT_URL
+    gcp_sm_project: str = ""                   # GCP_SM_PROJECT
+
+    # ── Database Backend ─────────────────────────────────────────
+    db_backend: str = "local"                  # local|motherduck|s3_sync|postgres
+    motherduck_token: str = ""                 # MOTHERDUCK_TOKEN
+    motherduck_db: str = "shieldkit"           # MOTHERDUCK_DB
+    db_s3_bucket: str = ""                     # DB_S3_BUCKET
+    db_s3_key: str = "shieldkit/shieldkit.duckdb"  # DB_S3_KEY
+    db_s3_region: str = ""                     # DB_S3_REGION
+    db_postgres_url: str = ""                  # DB_POSTGRES_URL
+
     # ── Tool Registry ────────────────────────────────────────────
     tool_registry: dict[str, Any] = field(default_factory=dict)
 
@@ -104,6 +125,27 @@ class Config:
         self.prowler_bin = _env("PROWLER_BIN", "prowler")
         self.checkov_bin = _env("CHECKOV_BIN", "checkov")
         self.scoutsuite_bin = _env("SCOUTSUITE_BIN", "scout")
+
+        # Secrets provider
+        self.secrets_provider = _env("SECRETS_PROVIDER", "local_encrypted")
+        self.secrets_master_key = _env("SHIELDKIT_MASTER_KEY", "")
+        self.vault_addr = _env("VAULT_ADDR", "")
+        self.vault_token = _env("VAULT_TOKEN", "")
+        self.vault_mount = _env("VAULT_MOUNT", "secret")
+        self.vault_path_prefix = _env("VAULT_PATH_PREFIX", "shieldkit")
+        self.aws_sm_region = _env("AWS_SM_REGION", self.aws_region)
+        self.aws_sm_prefix = _env("AWS_SM_PREFIX", "shieldkit/")
+        self.azure_vault_url = _env("AZURE_VAULT_URL", "")
+        self.gcp_sm_project = _env("GCP_SM_PROJECT", self.gcp_project_id)
+
+        # Database backend
+        self.db_backend = _env("DB_BACKEND", "local")
+        self.motherduck_token = _env("MOTHERDUCK_TOKEN", "")
+        self.motherduck_db = _env("MOTHERDUCK_DB", "shieldkit")
+        self.db_s3_bucket = _env("DB_S3_BUCKET", "")
+        self.db_s3_key = _env("DB_S3_KEY", "shieldkit/shieldkit.duckdb")
+        self.db_s3_region = _env("DB_S3_REGION", self.aws_region)
+        self.db_postgres_url = _env("DB_POSTGRES_URL", "")
 
         # ZAP
         self.zap_host = _env("ZAP_HOST", "localhost")

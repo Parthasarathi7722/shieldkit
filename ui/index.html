@@ -162,6 +162,25 @@
             transform: translateY(-2px);
         }
 
+        .dash-card-clickable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dash-card-clickable:active {
+            transform: translateY(0);
+            opacity: 0.85;
+        }
+
+        #recentScansBody tr.scan-row {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        #recentScansBody tr.scan-row:hover {
+            background: #1a2233;
+        }
+
         .stat-label {
             font-size: 12px;
             text-transform: uppercase;
@@ -978,6 +997,95 @@
                 font-size: 12px;
             }
         }
+
+        /* ── CI/CD Integration Tab ──────────────────────────────── */
+        .cicd-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;}
+        .cicd-platform-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
+        .cicd-platform-card{padding:12px 8px;border-radius:8px;border:2px solid #1f2937;cursor:pointer;text-align:center;transition:border-color .2s,background .2s;}
+        .cicd-platform-card:hover{border-color:#374151;background:#1a2233;}
+        .cicd-platform-card.active{border-color:#10b981;background:#0d2b1e;}
+        .cicd-platform-icon{font-size:20px;margin-bottom:4px;}
+        .cicd-platform-name{font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .cicd-config-preview{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px 20px;font-family:'Monaco','Menlo',monospace;font-size:12px;color:#e6edf3;overflow:auto;white-space:pre;max-height:520px;line-height:1.6;}
+        .cicd-instruction-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #1f2937;align-items:flex-start;}
+        .cicd-step-num{width:22px;height:22px;border-radius:50%;background:#10b981;color:#000;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+        .cicd-step-text{font-size:13px;color:#d1d5db;line-height:1.5;}
+        .cicd-step-text code{background:#1f2937;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px;color:#10b981;}
+        @media(max-width:900px){.cicd-layout{grid-template-columns:1fr;}}
+
+        /* ── SOC Analyst Chat ───────────────────────────────────── */
+        .chat-layout{display:flex;flex-direction:column;height:calc(100vh - 160px);min-height:500px;}
+        .chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;background:#0d1117;border:1px solid #1f2937;border-radius:8px 8px 0 0;}
+        .chat-msg{display:flex;gap:12px;max-width:100%;}
+        .chat-msg.user{flex-direction:row-reverse;}
+        .chat-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:2px;}
+        .chat-avatar.assistant{background:#0d2b1e;border:1px solid #10b981;}
+        .chat-avatar.user{background:#1e3a5f;border:1px solid #3b82f6;}
+        .chat-bubble{max-width:78%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;word-break:break-word;}
+        .chat-bubble.assistant{background:#161b22;border:1px solid #30363d;color:#e6edf3;border-radius:4px 12px 12px 12px;}
+        .chat-bubble.user{background:#1e3a5f;border:1px solid #3b82f6;color:#e6edf3;border-radius:12px 4px 12px 12px;}
+        .chat-bubble pre{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;overflow-x:auto;font-size:11px;margin:8px 0;white-space:pre-wrap;}
+        .chat-bubble code{background:#1f2937;padding:1px 5px;border-radius:3px;font-size:11px;color:#10b981;}
+        .chat-tool-call{background:#0d1117;border:1px solid #1f2937;border-left:3px solid #f59e0b;border-radius:4px;padding:8px 12px;margin:6px 0;font-size:12px;}
+        .chat-tool-call.running{border-left-color:#3b82f6;}
+        .chat-tool-call.done{border-left-color:#10b981;}
+        .chat-tool-name{font-weight:600;font-family:monospace;color:#f59e0b;}
+        .chat-tool-call.running .chat-tool-name{color:#3b82f6;}
+        .chat-tool-call.done .chat-tool-name{color:#10b981;}
+        .chat-tool-summary{color:#9ca3af;font-size:11px;margin-top:2px;}
+        .chat-input-row{display:flex;gap:8px;padding:12px;background:#161b22;border:1px solid #1f2937;border-top:none;border-radius:0 0 8px 8px;align-items:flex-end;}
+        .chat-input{flex:1;background:#0d1117;border:1px solid #374151;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:13px;resize:none;min-height:44px;max-height:160px;outline:none;font-family:inherit;line-height:1.5;}
+        .chat-input:focus{border-color:#10b981;}
+        .chat-typing{display:none;align-items:center;gap:6px;color:#6b7280;font-size:12px;padding:4px 0;}
+        .chat-typing.visible{display:flex;}
+        .chat-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;animation:chat-bounce 1.2s infinite;}
+        .chat-dot:nth-child(2){animation-delay:.2s;}
+        .chat-dot:nth-child(3){animation-delay:.4s;}
+        @keyframes chat-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+        .chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+        .chat-suggestion{background:#1f2937;border:1px solid #374151;border-radius:16px;padding:5px 12px;font-size:11px;color:#9ca3af;cursor:pointer;transition:all .15s;}
+        .chat-suggestion:hover{background:#374151;color:#e6edf3;border-color:#6b7280;}
+        .chat-empty{text-align:center;padding:40px 20px;color:#4b5563;}
+        .chat-empty-icon{font-size:48px;margin-bottom:12px;}
+        .chat-empty-title{font-size:16px;font-weight:600;color:#6b7280;margin-bottom:8px;}
+        .chat-empty-sub{font-size:13px;color:#4b5563;}
+
+        /* ── Secrets Field Integration ──────────────────────────── */
+        .field-with-secret{display:flex;gap:6px;align-items:center;}
+        .field-with-secret .form-input{flex:1;min-width:0;}
+        .secret-store-btn{padding:6px 10px;border-radius:6px;border:1px solid #374151;background:#1f2937;color:#9ca3af;cursor:pointer;font-size:12px;white-space:nowrap;flex-shrink:0;transition:all .15s;}
+        .secret-store-btn:hover{border-color:#10b981;color:#10b981;}
+        .sk-ref-badge{display:flex;align-items:center;gap:6px;background:#0d2b1e;border:1px solid #10b981;border-radius:6px;padding:6px 10px;font-family:monospace;font-size:12px;color:#10b981;flex:1;min-width:0;overflow:hidden;}
+        .sk-ref-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+        .sk-ref-change{padding:3px 8px;border-radius:4px;border:1px solid #374151;background:transparent;color:#6b7280;cursor:pointer;font-size:11px;flex-shrink:0;}
+        .sk-ref-change:hover{border-color:#ef4444;color:#ef4444;}
+        .quickkey-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #1f2937;}
+        .quickkey-label{width:160px;font-size:12px;color:#9ca3af;flex-shrink:0;}
+        .quickkey-row .form-input{flex:1;font-size:12px;}
+        .quickkey-store-btn{padding:5px 12px;border-radius:5px;border:1px solid #374151;background:#1f2937;color:#9ca3af;cursor:pointer;font-size:11px;white-space:nowrap;}
+        .quickkey-store-btn:hover{border-color:#10b981;color:#10b981;}
+        .quickkey-store-btn.stored{border-color:#10b981;color:#10b981;background:#0d2b1e;}
+
+        /* ── Infrastructure Tab ─────────────────────────────────── */
+        .infra-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+        .infra-provider-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+        .infra-provider-card{padding:14px 10px;border-radius:8px;border:2px solid #1f2937;cursor:pointer;text-align:center;transition:border-color .2s,background .2s;}
+        .infra-provider-card:hover{border-color:#374151;background:#1a2233;}
+        .infra-provider-card.active{border-color:#10b981;background:#0d2b1e;}
+        .infra-provider-icon{font-size:22px;margin-bottom:6px;}
+        .infra-provider-name{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .infra-backend-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px;}
+        .infra-test-btn{padding:8px 18px;border-radius:6px;border:1px solid #374151;background:#1f2937;color:#d1d5db;cursor:pointer;font-size:13px;transition:all .2s;}
+        .infra-test-btn:hover{background:#374151;color:#f3f4f6;}
+        .infra-test-btn.testing{opacity:.6;cursor:default;}
+        .infra-status-ok{color:#10b981;font-size:12px;font-weight:600;}
+        .infra-status-err{color:#ef4444;font-size:12px;font-weight:600;}
+        .secret-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #1f2937;}
+        .secret-key{flex:1;font-family:monospace;font-size:13px;color:#e6edf3;}
+        .secret-ref{font-size:11px;color:#6b7280;font-family:monospace;}
+        .secret-del-btn{padding:3px 10px;border-radius:4px;border:1px solid #374151;background:transparent;color:#9ca3af;cursor:pointer;font-size:12px;}
+        .secret-del-btn:hover{border-color:#ef4444;color:#ef4444;}
+        @media(max-width:900px){.infra-layout{grid-template-columns:1fr;}}
     </style>
 </head>
 <body>
@@ -993,10 +1101,13 @@
                 <div class="nav-item" data-tab="cloud">☁️ Cloud Security</div>
                 <div class="nav-item" data-tab="logs">📋 Log Explorer</div>
                 <div class="nav-item" data-tab="tools">🛠️ Tools &amp; Config</div>
+                <div class="nav-item" data-tab="cicd">🔄 CI/CD Integration</div>
+                <div class="nav-item" data-tab="soc">🤖 SOC Analyst</div>
             </div>
 
             <div class="nav-section" style="margin-top: auto; padding-top: 24px; border-top: 1px solid #1f2937;">
                 <div class="nav-section-title">Settings</div>
+                <div class="nav-item" data-tab="infra">🔒 Infrastructure</div>
                 <div class="nav-item" data-tab="settings">⚙️ Settings</div>
             </div>
         </div>
@@ -1019,35 +1130,35 @@
                 <!-- Dashboard Tab -->
                 <div id="dashboard" class="tab-content active">
                     <div class="card-grid">
-                        <div class="stat-card">
+                        <div class="stat-card dash-card-clickable" onclick="switchTab('scanner')" title="View all scans">
                             <div class="stat-label">Total Scans</div>
                             <div class="stat-value" id="dashTotalScans">0</div>
-                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Last 30 days</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Last 30 days ↗</div>
                         </div>
-                        <div class="stat-card critical">
+                        <div class="stat-card critical dash-card-clickable" onclick="dashGoToScanner('critical')" title="View critical vulnerabilities">
                             <div class="stat-label">Critical</div>
                             <div class="stat-value" id="dashCritical">0</div>
-                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Vulnerabilities</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Vulnerabilities ↗</div>
                         </div>
-                        <div class="stat-card high">
+                        <div class="stat-card high dash-card-clickable" onclick="dashGoToScanner('high')" title="View high vulnerabilities">
                             <div class="stat-label">High</div>
                             <div class="stat-value" id="dashHigh">0</div>
-                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Vulnerabilities</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Vulnerabilities ↗</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card dash-card-clickable" onclick="switchTab('cloud')" title="View cloud findings">
                             <div class="stat-label">Cloud Findings</div>
                             <div class="stat-value" id="dashCloudFindings">0</div>
-                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Services checked</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Services checked ↗</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card dash-card-clickable" onclick="switchTab('logs')" title="View log explorer">
                             <div class="stat-label">Logs Ingested</div>
                             <div class="stat-value" id="dashLogsIngested">0</div>
-                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Events</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Events ↗</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card dash-card-clickable" onclick="switchTab('cloud')" title="View compliance details">
                             <div class="stat-label">Compliance Score</div>
                             <div class="stat-value" id="dashCompliance">0%</div>
-                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Overall</div>
+                            <div class="stat-label" style="color: #6b7280; margin-top: 8px;">Overall ↗</div>
                         </div>
                     </div>
 
@@ -1078,12 +1189,12 @@
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <div style="font-size: 16px; font-weight: 600; color: #f3f4f6;">Recent Scans</div>
+                            <button class="btn btn-secondary btn-small" onclick="switchTab('scanner')">View All →</button>
                         </div>
                         <div class="table-wrapper">
                             <table id="recentScansTable">
                                 <thead>
                                     <tr>
-                                        <th>Scan ID</th>
                                         <th>Type</th>
                                         <th>Target</th>
                                         <th>Status</th>
@@ -1091,16 +1202,28 @@
                                         <th>High</th>
                                         <th>Medium</th>
                                         <th>Started</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recentScansBody">
                                     <tr>
-                                        <td colspan="8" style="text-align: center; color: #6b7280;">No scans yet. Start by running a new scan.</td>
+                                        <td colspan="8" style="text-align: center; color: #6b7280;">Loading scan history...</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                </div>
+
+                <!-- Scan Detail Modal -->
+                <div id="scanDetailModal" class="modal">
+                  <div class="modal-content" style="max-width:760px;max-height:85vh;overflow-y:auto;">
+                    <div class="modal-header">
+                      <div class="modal-title" id="scanDetailTitle">Scan Report</div>
+                      <button class="modal-close" onclick="closeModal('scanDetailModal')">✕</button>
+                    </div>
+                    <div class="modal-body" id="scanDetailBody">Loading...</div>
+                  </div>
                 </div>
 
                 <!-- Scanner Tab -->
@@ -1506,6 +1629,238 @@
                     </div>
                 </div>
 
+                <!-- CI/CD Integration Tab -->
+                <div id="cicd" class="tab-content">
+                  <div class="card">
+                    <div class="cicd-layout">
+
+                      <!-- LEFT: platform + options -->
+                      <div>
+                        <div class="form-label" style="margin-bottom:10px;">Select Platform</div>
+                        <div class="cicd-platform-grid" id="cicdPlatformGrid">
+                          <!-- 8 platform cards generated by initCICDTab() -->
+                        </div>
+
+                        <div class="form-label" style="margin-bottom:8px;">Include Scans</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;" id="cicdScanChecks">
+                          <!-- checkboxes: sbom, sca, container, iac, dast, cloud -->
+                        </div>
+
+                        <div class="form-group">
+                          <div class="form-label">Fail Build On</div>
+                          <select class="form-select" id="cicdFailOn" onchange="generateCICDConfig()">
+                            <option value="critical">Critical only</option>
+                            <option value="critical,high" selected>Critical + High</option>
+                            <option value="critical,high,medium">Critical + High + Medium</option>
+                            <option value="none">Never (report only)</option>
+                          </select>
+                        </div>
+
+                        <div class="form-group">
+                          <div class="form-label">Scan Target</div>
+                          <input class="form-input" id="cicdTarget" value="nginx:latest"
+                                 placeholder="image:tag or repo path" oninput="generateCICDConfig()">
+                        </div>
+
+                        <div class="form-group">
+                          <div class="form-label">ShieldKit URL</div>
+                          <input class="form-input" id="cicdURL" value="http://shieldkit:8000"
+                                 placeholder="http://shieldkit:8000" oninput="generateCICDConfig()">
+                        </div>
+
+                        <div class="form-group">
+                          <div class="form-label">Deployment Mode</div>
+                          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px;">
+                            <input type="radio" name="cicdMode" value="docker" checked onchange="generateCICDConfig()">
+                            <span style="font-size:13px;color:#d1d5db;">Docker (start ShieldKit in pipeline)</span>
+                          </label>
+                          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="radio" name="cicdMode" value="hosted" onchange="generateCICDConfig()">
+                            <span style="font-size:13px;color:#d1d5db;">Hosted (use existing ShieldKit instance)</span>
+                          </label>
+                        </div>
+
+                        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="generateCICDConfig()">
+                          ⚡ Generate Config
+                        </button>
+                      </div>
+
+                      <!-- RIGHT: generated config + instructions -->
+                      <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                          <code id="cicdFileLabel" style="color:#10b981;font-size:13px;background:#0d1117;padding:4px 10px;border-radius:4px;border:1px solid #30363d;"></code>
+                          <div style="display:flex;gap:8px;">
+                            <button class="btn btn-secondary btn-small" onclick="copyCICDConfig()">📋 Copy</button>
+                            <button class="btn btn-secondary btn-small" onclick="downloadCICDConfig()">⬇ Download</button>
+                          </div>
+                        </div>
+                        <pre class="cicd-config-preview" id="cicdConfigPreview">Select a platform and click Generate Config →</pre>
+
+                        <div style="margin-top:24px;">
+                          <div class="form-label" style="margin-bottom:12px;">Setup Instructions</div>
+                          <div id="cicdInstructions"></div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SOC Analyst Tab -->
+                <div id="soc" class="tab-content">
+                  <div class="card" style="padding:0;overflow:hidden;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;">
+                      <div>
+                        <div style="font-size:15px;font-weight:600;color:#f3f4f6;">SOC Analyst</div>
+                        <div style="font-size:12px;color:#6b7280;margin-top:2px;">AI-powered security analyst with live ShieldKit scanning tools</div>
+                      </div>
+                      <div style="display:flex;gap:8px;">
+                        <button class="btn btn-secondary btn-small" onclick="clearSOCChat()" title="Clear conversation">🗑 Clear</button>
+                        <button class="btn btn-secondary btn-small" onclick="exportSOCChat()" title="Export conversation">⬇ Export</button>
+                      </div>
+                    </div>
+
+                    <div style="padding:12px 20px 0;">
+                      <div class="chat-suggestions" id="socSuggestions">
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">Scan nginx:latest for vulnerabilities</span>
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">Run SBOM on alpine:3.19 and list components</span>
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">Check IaC misconfigs in current directory</span>
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">Show recent scan history</span>
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">AWS cloud posture assessment</span>
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">Query critical logs from last hour</span>
+                        <span class="chat-suggestion" onclick="sendSOCSuggestion(this)">What are the top 3 security risks I should fix?</span>
+                      </div>
+                    </div>
+
+                    <div style="padding:0 20px 20px;" class="chat-layout">
+                      <div class="chat-messages" id="socMessages">
+                        <div class="chat-empty" id="socEmpty">
+                          <div class="chat-empty-icon">🛡️</div>
+                          <div class="chat-empty-title">ShieldKit SOC Analyst</div>
+                          <div class="chat-empty-sub">Ask me to run scans, investigate threats, query logs, or generate security reports.<br>I have live access to all ShieldKit scanning tools.</div>
+                        </div>
+                      </div>
+                      <div class="chat-typing" id="socTyping">
+                        <span>Analyst is thinking</span>
+                        <div class="chat-dot"></div><div class="chat-dot"></div><div class="chat-dot"></div>
+                      </div>
+                      <div class="chat-input-row">
+                        <textarea class="chat-input" id="socInput" rows="1"
+                          placeholder="Ask the SOC Analyst... (Shift+Enter for newline, Enter to send)"
+                          onkeydown="handleSOCKey(event)" oninput="autoResizeSOCInput(this)"></textarea>
+                        <button class="btn btn-primary" id="socSendBtn" onclick="sendSOCMessage()" style="height:44px;padding:0 16px;flex-shrink:0;">
+                          <span id="socSendIcon">➤</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style="padding:8px 20px;border-top:1px solid #1f2937;background:#0d1117;border-radius:0 0 8px 8px;">
+                      <div style="font-size:11px;color:#4b5563;display:flex;align-items:center;gap:6px;">
+                        <span>🔑</span>
+                        <span id="socKeyStatus">API key not configured — add in <strong style="color:#9ca3af;">Settings → SOC Analyst API Key</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Infrastructure Tab -->
+                <div id="infra" class="tab-content">
+                  <div class="infra-layout">
+
+                    <!-- LEFT: Secrets Manager -->
+                    <div class="card">
+                      <div style="font-size:16px;font-weight:600;color:#f3f4f6;margin-bottom:4px;">🔒 Secrets Manager</div>
+                      <div style="font-size:12px;color:#6b7280;margin-bottom:20px;">Store API keys &amp; tokens securely. Reference them as <code style="background:#1f2937;padding:1px 5px;border-radius:3px;font-size:11px;color:#10b981;">sk://key-name</code> in tool configs.</div>
+
+                      <div class="form-label" style="margin-bottom:10px;">Provider</div>
+                      <div class="infra-provider-grid" id="secretsProviderGrid"></div>
+
+                      <div id="secretsProviderFields" style="margin-bottom:16px;"></div>
+
+                      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;">
+                        <button class="infra-test-btn" id="secretsTestBtn" onclick="testSecretsConnection()">🔌 Test Connection</button>
+                        <button class="btn btn-primary btn-small" onclick="saveSecretsConfig()">💾 Save Config</button>
+                        <span id="secretsTestStatus"></span>
+                      </div>
+
+                      <div style="border-top:1px solid #1f2937;padding-top:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                          <div class="form-label" style="margin-bottom:0;">Stored Secrets</div>
+                          <button class="btn btn-secondary btn-small" onclick="showAddSecretModal()">+ Add Secret</button>
+                        </div>
+                        <div id="secretKeysList"><div style="color:#4b5563;font-size:13px;">Loading...</div></div>
+                      </div>
+                    </div>
+
+                    <!-- RIGHT: DB Persistence -->
+                    <div class="card">
+                      <div style="font-size:16px;font-weight:600;color:#f3f4f6;margin-bottom:4px;">🗄️ Database Persistence</div>
+                      <div style="font-size:12px;color:#6b7280;margin-bottom:20px;">Keep scan history across ephemeral CI runners. Local file is lost on runner restart.</div>
+
+                      <div class="form-label" style="margin-bottom:10px;">Backend</div>
+                      <div class="infra-backend-grid" id="dbBackendGrid"></div>
+
+                      <div id="dbBackendFields" style="margin-bottom:16px;"></div>
+
+                      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;">
+                        <button class="infra-test-btn" id="dbTestBtn" onclick="testDBConnection()">🔌 Test Connection</button>
+                        <button class="btn btn-primary btn-small" onclick="saveDBConfig()">💾 Save Config</button>
+                        <span id="dbTestStatus"></span>
+                      </div>
+
+                      <div style="border-top:1px solid #1f2937;padding-top:16px;" id="dbSyncPanel" style="display:none;">
+                        <div class="form-label" style="margin-bottom:12px;">S3 Sync Controls</div>
+                        <div style="display:flex;gap:8px;">
+                          <button class="btn btn-secondary btn-small" onclick="doDBSync('download')">⬇ Pull from S3</button>
+                          <button class="btn btn-secondary btn-small" onclick="doDBSync('upload')">⬆ Push to S3</button>
+                        </div>
+                        <div id="dbSyncStatus" style="margin-top:10px;font-size:12px;color:#6b7280;"></div>
+                      </div>
+
+                      <div style="border-top:1px solid #1f2937;padding-top:16px;margin-top:16px;">
+                        <div class="form-label" style="margin-bottom:8px;">Database Status</div>
+                        <div id="dbStatusPanel" style="font-size:13px;color:#6b7280;">Loading...</div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- Quick Project API Keys -->
+                  <div class="card" style="margin-top:24px;">
+                    <div style="font-size:16px;font-weight:600;color:#f3f4f6;margin-bottom:4px;">🗝️ Project API Keys</div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:20px;">Store sensitive credentials used by ShieldKit tools and MCP integrations. Click <strong>🔐 Store</strong> to save to the Secrets Manager and get a <code style="color:#10b981;font-family:monospace;font-size:11px;">sk://</code> reference you can paste anywhere.</div>
+                    <div id="quickApiKeysList">
+                      <!-- rendered by renderQuickApiKeys() -->
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Add Secret Modal -->
+                <div id="addSecretModal" class="modal">
+                  <div class="modal-content" style="max-width:480px;">
+                    <div class="modal-header">
+                      <div class="modal-title">Add Secret</div>
+                      <button class="modal-close" onclick="closeModal('addSecretModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <div class="form-label">Key Name</div>
+                        <input class="form-input" id="newSecretKey" placeholder="e.g. aws_access_key" oninput="updateSecretRef()">
+                        <div style="font-size:11px;color:#6b7280;margin-top:4px;">Reference in tools as: <code id="newSecretRefPreview" style="color:#10b981;font-family:monospace;font-size:11px;">sk://</code></div>
+                      </div>
+                      <div class="form-group">
+                        <div class="form-label">Value</div>
+                        <input class="form-input" id="newSecretValue" type="password" placeholder="secret value">
+                      </div>
+                      <div style="display:flex;gap:8px;justify-content:flex-end;">
+                        <button class="btn btn-secondary" onclick="closeModal('addSecretModal')">Cancel</button>
+                        <button class="btn btn-primary" onclick="addSecret()">Save Secret</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Settings Tab -->
                 <div id="settings" class="tab-content">
                     <div class="card">
@@ -1535,7 +1890,22 @@
                             </label>
                         </div>
 
-                        <button class="btn btn-primary">
+                        <div class="form-group" style="margin-top:24px;">
+                            <div class="form-label" style="display:flex;align-items:center;gap:6px;">
+                                🤖 SOC Analyst API Key
+                                <span style="font-size:11px;color:#6b7280;font-weight:normal;">(Anthropic Claude)</span>
+                            </div>
+                            <input type="password" class="form-input" id="socApiKey"
+                                placeholder="sk-ant-api03-…"
+                                oninput="updateSOCKeyStatus()">
+                            <div style="font-size:11px;color:#6b7280;margin-top:4px;">
+                                Required for the SOC Analyst chatbot. Get your key at
+                                <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#10b981;">console.anthropic.com</a>.
+                                Stored in browser localStorage only.
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveSettings()">
                             <span>💾</span>
                             <span>Save Settings</span>
                         </button>
@@ -1988,9 +2358,15 @@
                 cloud: 'Cloud Security',
                 logs: 'Log Explorer',
                 tools: 'Tools & Configuration',
+                cicd: 'CI/CD Integration',
+                soc: 'SOC Analyst',
+                infra: 'Infrastructure',
                 settings: 'Settings'
             };
             document.getElementById('headerTitle').textContent = titleMap[tabName] || tabName;
+            if (tabName === 'cicd') initCICDTab();
+            if (tabName === 'soc') initSOCTab();
+            if (tabName === 'infra') initInfraTab();
         }
 
         function selectScanType(scanType) {
@@ -3496,10 +3872,44 @@ Vulnerabilities found. See detailed report above.`
                         ${field.help ? `<div class="field-help">${field.help}</div>` : ''}
                     </div>`;
             }
+            // Sensitive field: add secrets integration
+            const isSensitive = field.type === 'password' ||
+                /key|token|secret|password|credential|api_key/i.test(field.key);
+            if (isSensitive) {
+                const isRef = val && val.startsWith('sk://');
+                const inputHtml = isRef
+                    ? `<div class="sk-ref-badge">
+                         <span>🔐</span>
+                         <span class="sk-ref-text" title="${val}">${val}</span>
+                         <button type="button" class="sk-ref-change"
+                           onclick="clearSecretRef('cfg-${field.key}','${_configToolKey || '__tool'}','${field.key}')" title="Remove reference and enter new value">✕ Change</button>
+                       </div>`
+                    : `<div class="field-with-secret">
+                         <input type="${field.type === 'password' ? 'password' : 'text'}"
+                           class="form-input" id="cfg-${field.key}"
+                           value="${val}" placeholder="${field.default || field.placeholder || ''}">
+                         <button type="button" class="secret-store-btn"
+                           onclick="storeFieldInSecrets('cfg-${field.key}','${_configToolKey || '__tool'}','${field.key}','${field.label.replace(/'/g,"\\'")}')">
+                           🔐 Store
+                         </button>
+                       </div>`;
+                // Store the ref value in a hidden input so saveToolConfig() still reads it
+                const hiddenHtml = isRef
+                    ? `<input type="hidden" id="cfg-${field.key}" value="${val}">`
+                    : '';
+                return `
+                <div class="form-group">
+                    <div class="form-label">${field.label}${field.required ? ' <span style="color:#dc2626">*</span>' : ''}
+                        <span style="font-size:10px;color:#6b7280;margin-left:6px;font-weight:400;">— use 🔐 to save to Secrets Manager</span>
+                    </div>
+                    ${inputHtml}${hiddenHtml}
+                    ${field.help ? `<div class="field-help">${field.help}</div>` : ''}
+                </div>`;
+            }
             return `
                 <div class="form-group">
                     <div class="form-label">${field.label}${field.required ? ' <span style="color:#dc2626">*</span>' : ''}</div>
-                    <input type="${field.type === 'password' ? 'password' : field.type === 'number' ? 'number' : 'text'}"
+                    <input type="${field.type === 'number' ? 'number' : 'text'}"
                         class="form-input" id="cfg-${field.key}"
                         value="${val}" placeholder="${field.default || ''}">
                     ${field.help ? `<div class="field-help">${field.help}</div>` : ''}
@@ -3550,6 +3960,42 @@ Vulnerabilities found. See detailed report above.`
             document.getElementById('toolConfigModal').classList.add('active');
         }
 
+        async function storeFieldInSecrets(fieldId, toolKey, fieldKey, fieldLabel) {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+            const value = input.value.trim();
+            if (!value) { showToast('Enter a value first, then click 🔐 Store', 'warning'); return; }
+            if (value.startsWith('sk://')) { showToast('Already a secrets reference', 'info'); return; }
+            const secretKey = `${toolKey}_${fieldKey}`.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+            try {
+                const res = await fetch(`${state.apiBase}/secrets/set`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({key: secretKey, value}),
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Failed to store secret');
+                const ref = `sk://${secretKey}`;
+                const wrapper = input.closest('.field-with-secret') || input.parentElement;
+                wrapper.outerHTML = `<div class="field-with-secret">
+                  <div class="sk-ref-badge">🔐 <span>${ref}</span>
+                    <button class="sk-ref-change" onclick="clearSecretRef('${fieldId}','${toolKey}','${fieldKey}')">✕ Change</button>
+                  </div>
+                  <input type="hidden" id="${fieldId}" value="${ref}">
+                </div>`;
+                showToast(`Stored as ${ref}`, 'success');
+            } catch(e) { showToast('Store failed: ' + e.message, 'error'); }
+        }
+
+        function clearSecretRef(fieldId, toolKey, fieldKey) {
+            const hidden = document.getElementById(fieldId);
+            if (!hidden) return;
+            const wrapper = hidden.closest('.field-with-secret') || hidden.parentElement;
+            wrapper.outerHTML = `<div class="field-with-secret">
+              <input type="password" class="form-input" id="${fieldId}" value="" placeholder="Enter new value…" style="flex:1;">
+              <button type="button" class="secret-store-btn"
+                onclick="storeFieldInSecrets('${fieldId}','${toolKey || _configToolKey || '__tool'}','${fieldKey}','${fieldKey}')">🔐 Store</button>
+            </div>`;
+        }
+
         async function saveToolConfig() {
             const tool = tools.find(t => t.key === _configToolKey);
             if (!tool) return;
@@ -3589,6 +4035,1289 @@ Vulnerabilities found. See detailed report above.`
             }
         }
 
+        // ══════════════════════════════════════════════════════════
+        // CI/CD INTEGRATION
+        // ══════════════════════════════════════════════════════════
+
+        let _cicdPlatform = 'github';
+
+        const CICD_PLATFORMS = {
+          github:    {name:'GitHub Actions',   icon:'🐙', file:'.github/workflows/shieldkit.yml'},
+          jenkins:   {name:'Jenkins',          icon:'🏗️',  file:'Jenkinsfile'},
+          gitlab:    {name:'GitLab CI',        icon:'🦊',  file:'.gitlab-ci.yml'},
+          bitbucket: {name:'Bitbucket',        icon:'🪣',  file:'bitbucket-pipelines.yml'},
+          argocd:    {name:'ArgoCD',           icon:'⚙️',  file:'shieldkit-presync-job.yaml'},
+          circleci:  {name:'CircleCI',         icon:'⭕',  file:'.circleci/config.yml'},
+          azure:     {name:'Azure DevOps',     icon:'🔷',  file:'azure-pipelines.yml'},
+          codebuild: {name:'AWS CodeBuild',    icon:'🟠',  file:'buildspec.yml'},
+        };
+
+        function initCICDTab() {
+          const grid = document.getElementById('cicdPlatformGrid');
+          if (!grid || grid.children.length) return;
+          grid.innerHTML = Object.entries(CICD_PLATFORMS).map(([key, p]) => `
+            <div class="cicd-platform-card${key===_cicdPlatform?' active':''}"
+                 onclick="selectCICDPlatform('${key}')" title="${p.name}">
+              <div class="cicd-platform-icon">${p.icon}</div>
+              <div class="cicd-platform-name">${p.name}</div>
+            </div>`).join('');
+
+          const scans = [
+            {id:'sbom', label:'SBOM'},
+            {id:'sca',  label:'SCA / CVEs'},
+            {id:'container', label:'Container'},
+            {id:'iac',  label:'IaC'},
+            {id:'dast', label:'DAST (ZAP)'},
+            {id:'cloud',label:'Cloud Posture'},
+          ];
+          document.getElementById('cicdScanChecks').innerHTML = scans.map(s => `
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#d1d5db;">
+              <input type="checkbox" id="cicdScan_${s.id}" ${['sbom','sca','container','iac'].includes(s.id)?'checked':''} onchange="generateCICDConfig()">
+              ${s.label}
+            </label>`).join('');
+
+          generateCICDConfig();
+        }
+
+        function selectCICDPlatform(key) {
+          _cicdPlatform = key;
+          document.querySelectorAll('.cicd-platform-card').forEach((c,i) => {
+            c.classList.toggle('active', Object.keys(CICD_PLATFORMS)[i] === key);
+          });
+          generateCICDConfig();
+        }
+
+        function _cicdOpts() {
+          const scans = ['sbom','sca','container','iac','dast','cloud']
+            .filter(id => { const el=document.getElementById('cicdScan_'+id); return el&&el.checked; });
+          const mode = document.querySelector('input[name="cicdMode"]:checked')?.value || 'docker';
+          return {
+            scans,
+            failOn: document.getElementById('cicdFailOn')?.value || 'critical,high',
+            target: document.getElementById('cicdTarget')?.value || 'nginx:latest',
+            url:    document.getElementById('cicdURL')?.value    || 'http://shieldkit:8000',
+            mode,
+          };
+        }
+
+        function generateCICDConfig() {
+          const cfg = _cicdOpts();
+          const p = CICD_PLATFORMS[_cicdPlatform];
+          const generators = {
+            github: _genGitHub, jenkins: _genJenkins, gitlab: _genGitLab,
+            bitbucket: _genBitbucket, argocd: _genArgoCD, circleci: _genCircleCI,
+            azure: _genAzure, codebuild: _genCodeBuild,
+          };
+          const config = (generators[_cicdPlatform] || _genGitHub)(cfg);
+          const el = document.getElementById('cicdConfigPreview');
+          if (el) el.textContent = config;
+          const lbl = document.getElementById('cicdFileLabel');
+          if (lbl) lbl.textContent = p.file;
+          _renderCICDInstructions(_cicdPlatform, cfg);
+        }
+
+        function _scanStepsBash(scans, url, target, failOn, indent='  ') {
+          const gate = failOn === 'none' ? '' :
+            `CRIT=$(echo "$RES"|python3 -c "import json,sys;d=json.load(sys.stdin);s=d.get('summary',{});print(sum(s.get(k,0) for k in '${failOn}'.split(',')))")
+${indent}[ "$CRIT" -gt 0 ] && { echo "❌ Security gate: $CRIT finding(s) at [${failOn}] severity!"; exit 1; } || echo "✅ Gate passed"`;
+
+          const cmds = [];
+          if (scans.includes('sbom'))
+            cmds.push(`echo "--- SBOM Scan ---"
+${indent}curl -sf -X POST ${url}/scan/sbom -H "Content-Type: application/json" \\
+${indent}  -d '{"target":"${target}"}' -o sbom.json && echo "✅ SBOM complete"`);
+
+          if (scans.includes('sca'))
+            cmds.push(`echo "--- SCA / Vulnerability Scan ---"
+${indent}RES=$(curl -sf -X POST ${url}/scan/sca -H "Content-Type: application/json" \\
+${indent}  -d '{"target":"${target}","options":{"severity":"critical,high"}}')
+${indent}echo "$RES" > sca.json
+${indent}${gate}`);
+
+          if (scans.includes('container'))
+            cmds.push(`echo "--- Container Scan ---"
+${indent}RES=$(curl -sf -X POST ${url}/scan/container -H "Content-Type: application/json" \\
+${indent}  -d '{"target":"${target}","options":{"severity":"CRITICAL,HIGH","ignore_unfixed":true}}')
+${indent}echo "$RES" > container.json
+${indent}${gate}`);
+
+          if (scans.includes('iac'))
+            cmds.push(`echo "--- IaC Scan ---"
+${indent}RES=$(curl -sf -X POST ${url}/scan/iac -H "Content-Type: application/json" \\
+${indent}  -d '{"target":".","options":{"framework":"all"}}')
+${indent}echo "$RES" > iac.json
+${indent}${gate}`);
+
+          if (scans.includes('dast'))
+            cmds.push(`echo "--- DAST (ZAP) Scan ---"
+${indent}RES=$(curl -sf -X POST ${url}/scan/zap -H "Content-Type: application/json" \\
+${indent}  -d '{"target":"${target}","scan_mode":"baseline","auth_method":"none"}')
+${indent}echo "$RES" > dast.json
+${indent}${gate}`);
+
+          if (scans.includes('cloud'))
+            cmds.push(`echo "--- Cloud Posture Scan ---"
+${indent}curl -sf -X POST ${url}/cloud/scan -H "Content-Type: application/json" \\
+${indent}  -d '{"provider":"aws","tool":"prowler"}' -o cloud.json && echo "✅ Cloud scan complete"`);
+
+          return cmds.join(`\n${indent}\n${indent}`);
+        }
+
+        function _genGitHub(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const service = mode === 'docker' ? `
+    services:
+      shieldkit:
+        image: ghcr.io/parthasarathi7722/shieldkit:latest
+        ports: ['8000:8000']
+        env:
+          SHIELDKIT_MODE: live
+        options: >-
+          --health-cmd "curl -f http://localhost:8000/health"
+          --health-interval 10s --health-retries 12 --health-timeout 5s
+` : '';
+          const startStep = mode === 'hosted' ? `
+      - name: Verify ShieldKit
+        run: curl -sf \${{ env.SHIELDKIT_URL }}/health
+` : '';
+          const steps = _scanStepsBash(scans, mode==='docker'?'http://localhost:8000':'\${{ env.SHIELDKIT_URL }}', target, failOn, '          ');
+          return `name: ShieldKit Security Gate
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+${service}
+jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+    ${mode==='docker'?'':'env:\n      SHIELDKIT_URL: ${{ vars.SHIELDKIT_URL }}'}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+${startStep}
+      - name: Run Security Scans
+        run: |
+          ${steps}
+
+      - name: Upload Scan Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shieldkit-results-\${{ github.run_number }}
+          path: "*.json"
+          retention-days: 30`;
+        }
+
+        function _genJenkins(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const scanUrl = mode === 'docker' ? 'http://localhost:8000' : '${SHIELDKIT_URL}';
+          const steps = _scanStepsBash(scans, scanUrl, target, failOn, '                ');
+          const dockerStart = mode === 'docker' ? `
+        stage('Start ShieldKit') {
+            steps {
+                sh '''
+                    docker run -d --name shieldkit -p 8000:8000 \\
+                      -e SHIELDKIT_MODE=live \\
+                      ghcr.io/parthasarathi7722/shieldkit:latest
+                    for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 3; done
+                '''
+            }
+        }` : '';
+          return `pipeline {
+    agent { label 'docker' }
+
+    environment {
+        TARGET        = '${target}'
+        SHIELDKIT_URL = '${url}'
+        FAIL_ON       = '${failOn}'
+    }
+
+    stages {${dockerStart}
+        stage('Security Scans') {
+            steps {
+                sh '''
+                    ${steps}
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.json', allowEmptyArchive: true
+            ${mode==='docker'?`sh 'docker rm -f shieldkit || true'`:''}
+        }
+        failure {
+            echo 'Security gate failed — review ShieldKit findings before merging.'
+        }
+    }
+}`;
+        }
+
+        function _genGitLab(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const serviceBlock = mode === 'docker' ? `
+services:
+  - name: ghcr.io/parthasarathi7722/shieldkit:latest
+    alias: shieldkit
+
+variables:
+  SHIELDKIT_URL: "http://shieldkit:8000"
+` : `
+variables:
+  SHIELDKIT_URL: "${url}"
+`;
+          const scanSteps = _scanStepsBash(scans, '$SHIELDKIT_URL', target, failOn, '  ');
+          return `${serviceBlock}
+stages:
+  - security
+
+shieldkit-security-gate:
+  stage: security
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl python3
+    - for i in $(seq 1 30); do curl -sf $SHIELDKIT_URL/health && break; sleep 3; done
+  script:
+    - ${scanSteps}
+  artifacts:
+    when: always
+    paths:
+      - "*.json"
+    expire_in: 30 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'`;
+        }
+
+        function _genBitbucket(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const serviceBlock = mode === 'docker' ? `
+definitions:
+  services:
+    shieldkit:
+      image: ghcr.io/parthasarathi7722/shieldkit:latest
+      environment:
+        SHIELDKIT_MODE: live
+      ports:
+        - "8000:8000"
+` : '';
+          const scanSteps = _scanStepsBash(scans, mode==='docker'?'http://localhost:8000':url, target, failOn, '          ');
+          return `${serviceBlock}pipelines:
+  default:
+    - step:
+        name: ShieldKit Security Gate
+        image: alpine:latest
+        ${mode==='docker'?'services:\n          - shieldkit\n        ':''}script:
+          - apk add --no-cache curl python3
+          - for i in $(seq 1 30); do curl -sf ${mode==='docker'?'http://localhost:8000':url}/health && break; sleep 3; done
+          - ${scanSteps}
+        artifacts:
+          - "*.json"`;
+        }
+
+        function _genArgoCD(cfg) {
+          const {scans, failOn, target, url} = cfg;
+          const scanCmds = scans.map(s => {
+            const endpoints = {sbom:'scan/sbom',sca:'scan/sca',container:'scan/container',iac:'scan/iac',dast:'scan/zap',cloud:'cloud/scan'};
+            const bodies = {
+              sbom:`{"target":"${target}"}`,
+              sca:`{"target":"${target}","options":{"severity":"critical,high"}}`,
+              container:`{"target":"${target}","options":{"severity":"CRITICAL,HIGH"}}`,
+              iac:`{"target":".","options":{"framework":"all"}}`,
+              dast:`{"target":"${target}","scan_mode":"baseline","auth_method":"none"}`,
+              cloud:`{"provider":"aws","tool":"prowler"}`,
+            };
+            return `curl -sf -X POST ${url}/${endpoints[s]} -H 'Content-Type: application/json' -d '${bodies[s]}' -o /results/${s}.json`;
+          }).join('\n              ');
+          return `# ArgoCD PreSync Hook — runs ShieldKit security gate before every deployment
+# Place this in your application's manifests directory.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shieldkit-security-gate
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-shieldkit
+          image: curlimages/curl:latest
+          command: [sh, -c]
+          args:
+            - for i in $(seq 1 30); do curl -sf ${url}/health && exit 0; sleep 3; done; exit 1
+      containers:
+        - name: security-gate
+          image: curlimages/curl:latest
+          command: [sh, -c]
+          args:
+            - |
+              mkdir -p /results
+              ${scanCmds}
+              ${failOn !== 'none' ? `CRIT=$(cat /results/*.json | python3 -c "
+import json,sys
+total=0
+for line in sys.stdin:
+    try:
+        d=json.loads(line)
+        s=d.get('summary',{})
+        total+=sum(s.get(k,0) for k in '${failOn}'.split(','))
+    except: pass
+print(total)")
+              [ "$CRIT" -gt 0 ] && { echo "Security gate failed: $CRIT findings at [${failOn}] severity"; exit 1; }` : ''}
+              echo "Security gate passed"`;
+        }
+
+        function _genCircleCI(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const dockerStart = mode === 'docker' ? `
+      - run:
+          name: Start ShieldKit
+          command: |
+            docker run -d --name shieldkit -p 8000:8000 \\
+              -e SHIELDKIT_MODE=live \\
+              ghcr.io/parthasarathi7722/shieldkit:latest
+            for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 3; done
+` : '';
+          const scanUrl = mode === 'docker' ? 'http://localhost:8000' : url;
+          const steps = _scanStepsBash(scans, scanUrl, target, failOn, '          ');
+          return `version: 2.1
+
+jobs:
+  security-gate:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+${dockerStart}
+      - run:
+          name: ShieldKit Security Scans
+          command: |
+            ${steps}
+
+      - store_artifacts:
+          path: .
+          destination: shieldkit-results
+
+workflows:
+  security:
+    jobs:
+      - security-gate:
+          filters:
+            branches:
+              only: [main, develop]`;
+        }
+
+        function _genAzure(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const containerRes = mode === 'docker' ? `
+resources:
+  containers:
+    - container: shieldkit
+      image: ghcr.io/parthasarathi7722/shieldkit:latest
+      ports:
+        - 8000:8000
+      env:
+        SHIELDKIT_MODE: live
+` : '';
+          const scanUrl = mode === 'docker' ? 'http://localhost:8000' : url;
+          const steps = _scanStepsBash(scans, scanUrl, target, failOn, '        ');
+          return `trigger:
+  branches:
+    include: [main, develop]
+
+pr:
+  branches:
+    include: ['*']
+
+pool:
+  vmImage: ubuntu-latest
+${containerRes}
+variables:
+  TARGET: '${target}'
+  SHIELDKIT_URL: '${url}'
+
+steps:
+  - checkout: self
+
+  - bash: |
+      for i in $(seq 1 30); do curl -sf ${scanUrl}/health && break; sleep 3; done
+    displayName: Wait for ShieldKit
+
+  - bash: |
+      ${steps}
+    displayName: ShieldKit Security Scans
+    continueOnError: false
+
+  - task: PublishBuildArtifacts@1
+    condition: always()
+    inputs:
+      pathToPublish: '$(System.DefaultWorkingDirectory)'
+      artifactName: shieldkit-results
+      publishLocation: Container`;
+        }
+
+        function _genCodeBuild(cfg) {
+          const {scans, failOn, target, url, mode} = cfg;
+          const installDocker = mode === 'docker' ?
+            `    commands:
+      - nohup dockerd &
+      - timeout 30 sh -c 'until docker info; do sleep 1; done'
+      - docker run -d --name shieldkit -p 8000:8000 -e SHIELDKIT_MODE=live ghcr.io/parthasarathi7722/shieldkit:latest
+      - for i in $(seq 1 30); do curl -sf http://localhost:8000/health && break; sleep 3; done` :
+            `    commands:
+      - for i in $(seq 1 30); do curl -sf ${url}/health && break; sleep 3; done`;
+          const scanUrl = mode === 'docker' ? 'http://localhost:8000' : url;
+          const steps = _scanStepsBash(scans, scanUrl, target, failOn, '      ');
+          return `version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - pip install -q requests
+
+  pre_build:
+    commands:
+      - echo "Starting ShieldKit..."
+${installDocker}
+
+  build:
+    commands:
+      - echo "Running security scans..."
+      - ${steps}
+
+  post_build:
+    commands:
+      - echo "Security gate passed — scan results saved as artifacts"
+
+artifacts:
+  files:
+    - "*.json"
+  name: shieldkit-results-\$(date +%Y%m%d-%H%M)
+
+reports:
+  shieldkit:
+    files:
+      - "*.json"`;
+        }
+
+        function _renderCICDInstructions(platform, cfg) {
+          const el = document.getElementById('cicdInstructions');
+          if (!el) return;
+          const p = CICD_PLATFORMS[platform];
+          const instructions = {
+            github: [
+              `Commit the generated file to your repo at <code>${p.file}</code>`,
+              `${cfg.mode==='hosted'?`Add a repository variable <code>SHIELDKIT_URL</code> pointing to your ShieldKit instance`:'Ensure your runner has Docker available (default GitHub-hosted runners do)'}`,
+              `Push to <code>main</code> or open a Pull Request — the workflow runs automatically`,
+              `View results in the <strong>Actions</strong> tab → your workflow run → <strong>Artifacts</strong>`,
+            ],
+            jenkins: [
+              `Place <code>Jenkinsfile</code> in the root of your repository`,
+              `${cfg.mode==='hosted'?`Set <code>SHIELDKIT_URL</code> in Jenkins → Manage Jenkins → System → Global Properties`:'Ensure the Jenkins agent has Docker installed and the daemon running'}`,
+              `Create a Pipeline job pointing to your repo — Jenkins auto-detects the Jenkinsfile`,
+              `Archived scan results appear in the build page under <strong>Build Artifacts</strong>`,
+            ],
+            gitlab: [
+              `Commit <code>.gitlab-ci.yml</code> to the root of your repository`,
+              `${cfg.mode==='hosted'?`Add a CI/CD variable <code>SHIELDKIT_URL</code> in Settings → CI/CD → Variables`:'Your GitLab Runner must support Docker services (use the docker executor)'}`,
+              `The pipeline triggers automatically on merge requests and pushes to <code>main</code>`,
+              `Download artifacts from the job page in the pipeline view`,
+            ],
+            bitbucket: [
+              `Commit <code>bitbucket-pipelines.yml</code> to your repository root`,
+              `${cfg.mode==='docker'?'Enable <strong>Docker</strong> in Repository Settings → Pipelines → Settings':'Add <code>SHIELDKIT_URL</code> in Repository Settings → Pipelines → Repository variables'}`,
+              `Pipelines run automatically on commits — view them in the <strong>Pipelines</strong> tab`,
+              `Download scan artifact JSON files from the pipeline run`,
+            ],
+            argocd: [
+              `Add <code>shieldkit-presync-job.yaml</code> to your ArgoCD application manifests directory`,
+              `Ensure ShieldKit is deployed as a Kubernetes Service reachable at <code>${cfg.url}</code> from within the cluster`,
+              `ArgoCD automatically runs the Job before each sync — sync fails if the security gate fails`,
+              `View Job logs in Kubernetes: <code>kubectl logs -l job-name=shieldkit-security-gate</code>`,
+            ],
+            circleci: [
+              `Commit <code>.circleci/config.yml</code> to your repository`,
+              `${cfg.mode==='hosted'?`Add <code>SHIELDKIT_URL</code> in Project Settings → Environment Variables`:'The machine executor provides Docker — no additional setup needed'}`,
+              `CircleCI runs the workflow on every push to <code>main</code> and <code>develop</code>`,
+              `Find scan artifacts in the <strong>Artifacts</strong> tab of the pipeline run`,
+            ],
+            azure: [
+              `Commit <code>azure-pipelines.yml</code> to your repository root`,
+              `Import or create a pipeline in Azure DevOps pointing to this file`,
+              `${cfg.mode==='hosted'?`Add <code>SHIELDKIT_URL</code> as a pipeline variable in Library → Variable groups`:'The Microsoft-hosted Ubuntu agent supports Docker — no additional setup needed'}`,
+              `Published artifacts appear under the build summary in the <strong>Artifacts</strong> drop-down`,
+            ],
+            codebuild: [
+              `Commit <code>buildspec.yml</code> to your repository root`,
+              `Enable <strong>Privileged mode</strong> on your CodeBuild project (required for Docker-in-Docker)`,
+              `${cfg.mode==='hosted'?`Set the <code>SHIELDKIT_URL</code> environment variable in the CodeBuild project settings`:'Ensure the CodeBuild service role has permission to pull from ghcr.io'}`,
+              `Scan result artifacts are uploaded to the S3 bucket configured in your CodeBuild project`,
+            ],
+          };
+          const steps = instructions[platform] || instructions.github;
+          el.innerHTML = steps.map((s,i) => `
+            <div class="cicd-instruction-step">
+              <div class="cicd-step-num">${i+1}</div>
+              <div class="cicd-step-text">${s}</div>
+            </div>`).join('');
+        }
+
+        function copyCICDConfig() {
+          const text = document.getElementById('cicdConfigPreview')?.textContent || '';
+          navigator.clipboard.writeText(text)
+            .then(() => showToast('Config copied to clipboard', 'success'))
+            .catch(() => showToast('Copy failed — select and copy manually', 'error'));
+        }
+
+        function downloadCICDConfig() {
+          const text = document.getElementById('cicdConfigPreview')?.textContent || '';
+          const filename = CICD_PLATFORMS[_cicdPlatform]?.file?.split('/').pop() || 'shieldkit-ci.yml';
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast(`Downloaded ${filename}`, 'success');
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // SOC ANALYST CHATBOT
+        // ══════════════════════════════════════════════════════════
+
+        let _socMessages = [];     // full conversation history
+        let _socWs = null;         // active WebSocket
+        let _socStreaming = false;  // currently receiving a response
+
+        function initSOCTab() {
+          updateSOCKeyStatus();
+        }
+
+        function updateSOCKeyStatus() {
+          const key = localStorage.getItem('shieldkit_soc_apikey') || '';
+          // Sync input field if in settings
+          const inputEl = document.getElementById('socApiKey');
+          if (inputEl && !inputEl.value && key) inputEl.value = key;
+          const statusEl = document.getElementById('socKeyStatus');
+          if (!statusEl) return;
+          if (key) {
+            statusEl.innerHTML = `🟢 API key configured (${key.slice(0,10)}…)`;
+            statusEl.style.color = '#10b981';
+          } else {
+            statusEl.innerHTML = `API key not configured — add in <strong style="color:#9ca3af;">Settings → SOC Analyst API Key</strong>`;
+            statusEl.style.color = '';
+          }
+        }
+
+        function saveSettings() {
+          const apiKey = document.getElementById('socApiKey')?.value?.trim();
+          if (apiKey) {
+            localStorage.setItem('shieldkit_soc_apikey', apiKey);
+            showToast('Settings saved', 'success');
+            updateSOCKeyStatus();
+          } else {
+            showToast('Settings saved', 'success');
+          }
+        }
+
+        function autoResizeSOCInput(el) {
+          el.style.height = 'auto';
+          el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+        }
+
+        function handleSOCKey(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendSOCMessage();
+          }
+        }
+
+        function sendSOCSuggestion(el) {
+          document.getElementById('socInput').value = el.textContent.trim();
+          sendSOCMessage();
+        }
+
+        function _socApiKey() {
+          return localStorage.getItem('shieldkit_soc_apikey') || '';
+        }
+
+        function _appendSOCMessage(role, content, toolCalls) {
+          const container = document.getElementById('socMessages');
+          const emptyEl = document.getElementById('socEmpty');
+          if (emptyEl) emptyEl.remove();
+
+          const isUser = role === 'user';
+          const avatarIcon = isUser ? '👤' : '🛡️';
+          const avatarClass = isUser ? 'user' : 'assistant';
+
+          // Format markdown-ish content
+          let html = _formatSOCContent(content);
+
+          // Tool call badges
+          let toolHtml = '';
+          if (toolCalls && toolCalls.length) {
+            toolHtml = toolCalls.map(tc => `
+              <div class="chat-tool-call done">
+                <div class="chat-tool-name">🔧 ${tc.name}</div>
+                <div class="chat-tool-summary">${JSON.stringify(tc.input).slice(0, 80)}</div>
+              </div>`).join('');
+          }
+
+          const msgEl = document.createElement('div');
+          msgEl.className = `chat-msg ${role}`;
+          msgEl.innerHTML = `
+            <div class="chat-avatar ${avatarClass}">${avatarIcon}</div>
+            <div>
+              ${toolHtml}
+              <div class="chat-bubble ${avatarClass}">${html}</div>
+            </div>`;
+          container.appendChild(msgEl);
+          container.scrollTop = container.scrollHeight;
+          return msgEl;
+        }
+
+        function _createStreamingBubble() {
+          const container = document.getElementById('socMessages');
+          const emptyEl = document.getElementById('socEmpty');
+          if (emptyEl) emptyEl.remove();
+
+          const msgEl = document.createElement('div');
+          msgEl.className = 'chat-msg assistant';
+          msgEl.id = 'socStreamMsg';
+          msgEl.innerHTML = `
+            <div class="chat-avatar assistant">🛡️</div>
+            <div id="socStreamWrapper">
+              <div class="chat-bubble assistant" id="socStreamBubble"></div>
+            </div>`;
+          container.appendChild(msgEl);
+          container.scrollTop = container.scrollHeight;
+          return document.getElementById('socStreamBubble');
+        }
+
+        function _addToolCallToStream(toolName, state) {
+          const wrapper = document.getElementById('socStreamWrapper');
+          if (!wrapper) return null;
+          const id = 'soc_tool_' + Date.now();
+          const div = document.createElement('div');
+          div.className = `chat-tool-call ${state}`;
+          div.id = id;
+          div.innerHTML = `
+            <div class="chat-tool-name">🔧 ${toolName}</div>
+            <div class="chat-tool-summary" id="${id}_sum">${state === 'running' ? 'Running…' : ''}</div>`;
+          wrapper.insertBefore(div, wrapper.firstChild);
+          return id;
+        }
+
+        function _formatSOCContent(text) {
+          if (!text) return '';
+          // Basic markdown → html
+          return text
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/```([^`]*?)```/gs, (_, code) => `<pre>${code}</pre>`)
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+            .replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>')
+            .replace(/^[-•] (.+)$/gm, '• $1')
+            .replace(/\n{2,}/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+        }
+
+        async function sendSOCMessage() {
+          if (_socStreaming) return;
+          const input = document.getElementById('socInput');
+          const text = input?.value?.trim();
+          if (!text) return;
+
+          const apiKey = _socApiKey();
+          if (!apiKey) {
+            showToast('Add your Anthropic API key in Settings → SOC Analyst API Key', 'warning');
+            switchTab('settings');
+            return;
+          }
+
+          // Clear input
+          input.value = '';
+          autoResizeSOCInput(input);
+
+          // Show user message
+          _appendSOCMessage('user', text);
+          _socMessages.push({role: 'user', content: text});
+
+          _socStreaming = true;
+          document.getElementById('socSendBtn').disabled = true;
+          document.getElementById('socSendIcon').textContent = '⏳';
+          document.getElementById('socTyping').classList.add('visible');
+
+          // Open WebSocket
+          const wsUrl = (state.wsEndpoint || 'ws://localhost:8000') + '/chat/ws';
+          const ws = new WebSocket(wsUrl);
+          _socWs = ws;
+
+          let streamBubble = null;
+          let streamText = '';
+          let toolCallMap = {};  // toolName → dom id
+
+          ws.onopen = () => {
+            ws.send(JSON.stringify({
+              type: 'chat',
+              messages: _socMessages,
+              api_key: apiKey,
+            }));
+          };
+
+          ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            const container = document.getElementById('socMessages');
+
+            if (msg.type === 'text_delta') {
+              document.getElementById('socTyping').classList.remove('visible');
+              if (!streamBubble) streamBubble = _createStreamingBubble();
+              streamText += msg.text;
+              streamBubble.innerHTML = _formatSOCContent(streamText);
+              container.scrollTop = container.scrollHeight;
+            } else if (msg.type === 'tool_start') {
+              document.getElementById('socTyping').classList.remove('visible');
+              const domId = _addToolCallToStream(msg.tool, 'running');
+              if (domId) toolCallMap[msg.tool] = domId;
+            } else if (msg.type === 'tool_running') {
+              const domId = toolCallMap[msg.tool];
+              if (domId) {
+                const el = document.getElementById(domId);
+                if (el) el.classList.replace('running', 'running');
+                const sumEl = document.getElementById(domId + '_sum');
+                if (sumEl) sumEl.textContent = JSON.stringify(msg.input || {}).slice(0, 80);
+              }
+            } else if (msg.type === 'tool_result') {
+              const domId = toolCallMap[msg.tool];
+              if (domId) {
+                const el = document.getElementById(domId);
+                if (el) { el.classList.remove('running'); el.classList.add('done'); }
+                const sumEl = document.getElementById(domId + '_sum');
+                if (sumEl) sumEl.textContent = typeof msg.summary === 'object' ? JSON.stringify(msg.summary).slice(0,80) : String(msg.summary);
+              }
+            } else if (msg.type === 'done') {
+              ws.close();
+            } else if (msg.type === 'error') {
+              document.getElementById('socTyping').classList.remove('visible');
+              _appendSOCMessage('assistant', `Error: ${msg.content}`);
+              ws.close();
+            }
+          };
+
+          ws.onclose = () => {
+            _socWs = null;
+            _socStreaming = false;
+            document.getElementById('socSendBtn').disabled = false;
+            document.getElementById('socSendIcon').textContent = '➤';
+            document.getElementById('socTyping').classList.remove('visible');
+
+            // Finalise streaming message into history
+            if (streamText) {
+              // Remove streaming element and replace with clean message
+              const streamEl = document.getElementById('socStreamMsg');
+              if (streamEl) streamEl.remove();
+              const toolCalls = Object.keys(toolCallMap).map(name => ({name, input: {}}));
+              _appendSOCMessage('assistant', streamText, toolCalls);
+              _socMessages.push({role: 'assistant', content: streamText});
+            }
+          };
+
+          ws.onerror = () => {
+            showToast('WebSocket error — check server is running', 'error');
+            _socStreaming = false;
+            document.getElementById('socSendBtn').disabled = false;
+            document.getElementById('socSendIcon').textContent = '➤';
+            document.getElementById('socTyping').classList.remove('visible');
+          };
+        }
+
+        function clearSOCChat() {
+          _socMessages = [];
+          if (_socWs) { _socWs.close(); _socWs = null; }
+          const container = document.getElementById('socMessages');
+          container.innerHTML = `
+            <div class="chat-empty" id="socEmpty">
+              <div class="chat-empty-icon">🛡️</div>
+              <div class="chat-empty-title">ShieldKit SOC Analyst</div>
+              <div class="chat-empty-sub">Ask me to run scans, investigate threats, query logs, or generate security reports.<br>I have live access to all ShieldKit scanning tools.</div>
+            </div>`;
+          showToast('Conversation cleared', 'info');
+        }
+
+        function exportSOCChat() {
+          if (!_socMessages.length) { showToast('No conversation to export', 'warning'); return; }
+          const lines = _socMessages.map(m => `[${m.role.toUpperCase()}]\n${m.content}\n`).join('\n---\n\n');
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([lines], {type: 'text/plain'}));
+          a.download = `soc-chat-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast('Conversation exported', 'success');
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // INFRASTRUCTURE TAB — Secrets Manager + DB Persistence
+        // ══════════════════════════════════════════════════════════
+
+        const SECRETS_PROVIDERS = {
+          local_encrypted: {name:'Local (AES-256)',  icon:'🔐', description:'Encrypted file on this server. Zero dependencies.'},
+          hashicorp_vault:  {name:'HashiCorp Vault', icon:'🏛️', description:'Self-hosted or HCP Vault. KV v2 engine.'},
+          aws_secrets:      {name:'AWS Secrets Mgr', icon:'🟠', description:'Amazon Secrets Manager. IAM or key auth.'},
+          azure_keyvault:   {name:'Azure Key Vault', icon:'🔷', description:'Azure Key Vault. DefaultAzureCredential auth.'},
+          gcp_secret:       {name:'GCP Secret Mgr',  icon:'🟡', description:'Google Cloud Secret Manager.'},
+        };
+
+        const DB_BACKENDS = {
+          local:      {name:'Local File',   icon:'💾', description:'Default — data/shieldkit.duckdb. Lost on ephemeral runners.'},
+          motherduck: {name:'MotherDuck',   icon:'☁️', description:'DuckDB Cloud — persistent & shareable. Free tier available.'},
+          s3_sync:    {name:'S3 Sync',      icon:'🪣', description:'Local file synced to S3 on startup/shutdown.'},
+          postgres:   {name:'PostgreSQL',   icon:'🐘', description:'Attach PostgreSQL via DuckDB postgres extension.'},
+        };
+
+        let _infraSecretsProvider = 'local_encrypted';
+        let _infraDBBackend = 'local';
+        let _secretsProviderMeta = {};
+        let _dbBackendMeta = {};
+
+        async function initInfraTab() {
+          // Render only once
+          const grid = document.getElementById('secretsProviderGrid');
+          if (!grid || grid.children.length) {
+            // Already rendered — just refresh dynamic data
+            await loadSecretKeys();
+            await loadDBStatus();
+            await renderQuickApiKeys();
+            return;
+          }
+
+          // Load provider + backend metadata from server
+          try {
+            const [pRes, bRes] = await Promise.all([
+              fetch(`${state.apiBase}/secrets/providers`),
+              fetch(`${state.apiBase}/db/backends`),
+            ]);
+            if (pRes.ok) { const pd = await pRes.json(); _secretsProviderMeta = pd.providers || pd; }
+            if (bRes.ok) { const bd = await bRes.json(); _dbBackendMeta = bd.backends || bd; }
+          } catch(e) {}
+
+          // Load saved configs
+          let savedSecrets = {provider: 'local_encrypted'};
+          let savedDB = {backend: 'local'};
+          try {
+            const [scRes, dbRes] = await Promise.all([
+              fetch(`${state.apiBase}/secrets/config`),
+              fetch(`${state.apiBase}/db/config`),
+            ]);
+            if (scRes.ok) { const sd = await scRes.json(); savedSecrets = sd.config || sd; }
+            if (dbRes.ok) { const dd = await dbRes.json(); savedDB = dd.config || dd; }
+          } catch(e) {}
+
+          _infraSecretsProvider = savedSecrets.provider || 'local_encrypted';
+          _infraDBBackend = savedDB.backend || 'local';
+
+          // Render provider cards
+          grid.innerHTML = Object.entries(SECRETS_PROVIDERS).map(([key, p]) => `
+            <div class="infra-provider-card${key===_infraSecretsProvider?' active':''}"
+                 onclick="selectSecretsProvider('${key}')" title="${p.description}">
+              <div class="infra-provider-icon">${p.icon}</div>
+              <div class="infra-provider-name" style="font-size:10px;">${p.name}</div>
+            </div>`).join('');
+
+          // Render backend cards
+          document.getElementById('dbBackendGrid').innerHTML = Object.entries(DB_BACKENDS).map(([key, b]) => `
+            <div class="infra-provider-card${key===_infraDBBackend?' active':''}"
+                 onclick="selectDBBackend('${key}')" title="${b.description}">
+              <div class="infra-provider-icon">${b.icon}</div>
+              <div class="infra-provider-name" style="font-size:10px;">${b.name}</div>
+            </div>`).join('');
+
+          renderSecretsProviderFields(savedSecrets);
+          renderDBBackendFields(savedDB);
+          await loadSecretKeys();
+          await loadDBStatus();
+          renderQuickApiKeys();
+        }
+
+        function selectSecretsProvider(key) {
+          _infraSecretsProvider = key;
+          document.querySelectorAll('#secretsProviderGrid .infra-provider-card').forEach((c, i) => {
+            c.classList.toggle('active', Object.keys(SECRETS_PROVIDERS)[i] === key);
+          });
+          renderSecretsProviderFields({provider: key});
+        }
+
+        function selectDBBackend(key) {
+          _infraDBBackend = key;
+          document.querySelectorAll('#dbBackendGrid .infra-provider-card').forEach((c, i) => {
+            c.classList.toggle('active', Object.keys(DB_BACKENDS)[i] === key);
+          });
+          renderDBBackendFields({backend: key});
+        }
+
+        function renderSecretsProviderFields(saved) {
+          const container = document.getElementById('secretsProviderFields');
+          if (!container) return;
+          const meta = _secretsProviderMeta[_infraSecretsProvider];
+          if (!meta || !meta.fields || !meta.fields.length) {
+            container.innerHTML = `<div style="font-size:13px;color:#6b7280;padding:8px 0;">${SECRETS_PROVIDERS[_infraSecretsProvider]?.description||''}</div>`;
+            return;
+          }
+          container.innerHTML = meta.fields.map(f => {
+            const val = saved[f.key] || f.default || '';
+            const inputType = f.type === 'password' ? 'password' : 'text';
+            return `<div class="form-group">
+              <div class="form-label">${f.label}${f.required?'<span style="color:#ef4444;margin-left:3px;">*</span>':''}</div>
+              <input class="form-input" id="sc_${f.key}" type="${inputType}"
+                     value="${val}" placeholder="${f.placeholder||''}"
+                     ${f.help?`title="${f.help}"`:''}/>
+              ${f.help?`<div style="font-size:11px;color:#6b7280;margin-top:3px;">${f.help}</div>`:''}
+            </div>`;
+          }).join('');
+        }
+
+        function renderDBBackendFields(saved) {
+          const container = document.getElementById('dbBackendFields');
+          if (!container) return;
+          const meta = _dbBackendMeta[_infraDBBackend];
+          if (!meta || !meta.fields || !meta.fields.length) {
+            container.innerHTML = `<div style="font-size:13px;color:#6b7280;padding:8px 0;">${DB_BACKENDS[_infraDBBackend]?.description||''}</div>`;
+            // Show/hide S3 sync panel
+            const syncPanel = document.getElementById('dbSyncPanel');
+            if (syncPanel) syncPanel.style.display = 'none';
+            return;
+          }
+          container.innerHTML = meta.fields.map(f => {
+            const val = saved[f.key] || f.default || '';
+            const inputType = f.type === 'password' ? 'password' : 'text';
+            return `<div class="form-group">
+              <div class="form-label">${f.label}${f.required?'<span style="color:#ef4444;margin-left:3px;">*</span>':''}</div>
+              <input class="form-input" id="db_${f.key}" type="${inputType}"
+                     value="${val}" placeholder="${f.placeholder||f.default||''}"/>
+              ${f.help?`<div style="font-size:11px;color:#6b7280;margin-top:3px;">${f.help}</div>`:''}
+            </div>`;
+          }).join('');
+          // Show S3 sync panel only for s3_sync backend
+          const syncPanel = document.getElementById('dbSyncPanel');
+          if (syncPanel) syncPanel.style.display = _infraDBBackend === 's3_sync' ? 'block' : 'none';
+        }
+
+        function _collectSecretsConfig() {
+          const cfg = {provider: _infraSecretsProvider};
+          const meta = _secretsProviderMeta[_infraSecretsProvider];
+          if (meta && meta.fields) {
+            meta.fields.forEach(f => {
+              const el = document.getElementById('sc_' + f.key);
+              if (el && el.value) cfg[f.key] = el.value;
+            });
+          }
+          return cfg;
+        }
+
+        function _collectDBConfig() {
+          const cfg = {backend: _infraDBBackend};
+          const meta = _dbBackendMeta[_infraDBBackend];
+          if (meta && meta.fields) {
+            meta.fields.forEach(f => {
+              const el = document.getElementById('db_' + f.key);
+              if (el && el.value) cfg[f.key] = el.value;
+            });
+          }
+          return cfg;
+        }
+
+        async function saveSecretsConfig() {
+          const cfg = _collectSecretsConfig();
+          try {
+            const res = await fetch(`${state.apiBase}/secrets/config`, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({config: cfg}),
+            });
+            if (res.ok) {
+              showToast('Secrets config saved', 'success');
+            } else {
+              const err = await res.json().catch(()=>({detail:'Unknown error'}));
+              showToast('Save failed: ' + (err.detail||'unknown'), 'error');
+            }
+          } catch(e) { showToast('Save failed: ' + e.message, 'error'); }
+        }
+
+        async function saveDBConfig() {
+          const cfg = _collectDBConfig();
+          try {
+            const res = await fetch(`${state.apiBase}/db/config`, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({config: cfg}),
+            });
+            if (res.ok) {
+              showToast('DB config saved — restart server to apply', 'success');
+            } else {
+              const err = await res.json().catch(()=>({detail:'Unknown error'}));
+              showToast('Save failed: ' + (err.detail||'unknown'), 'error');
+            }
+          } catch(e) { showToast('Save failed: ' + e.message, 'error'); }
+        }
+
+        async function testSecretsConnection() {
+          const btn = document.getElementById('secretsTestBtn');
+          const status = document.getElementById('secretsTestStatus');
+          btn.classList.add('testing');
+          btn.textContent = '⏳ Testing...';
+          status.textContent = '';
+          try {
+            const cfg = _collectSecretsConfig();
+            const res = await fetch(`${state.apiBase}/secrets/test`, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({config: cfg}),
+            });
+            const data = await res.json();
+            if (data.ok) {
+              status.innerHTML = '<span class="infra-status-ok">✓ Connected</span>';
+              showToast('Secrets provider connected', 'success');
+            } else {
+              status.innerHTML = `<span class="infra-status-err">✗ ${data.error||'Failed'}</span>`;
+              showToast('Connection failed: ' + (data.error||'unknown'), 'error');
+            }
+          } catch(e) {
+            status.innerHTML = `<span class="infra-status-err">✗ ${e.message}</span>`;
+          } finally {
+            btn.classList.remove('testing');
+            btn.textContent = '🔌 Test Connection';
+          }
+        }
+
+        async function testDBConnection() {
+          const btn = document.getElementById('dbTestBtn');
+          const status = document.getElementById('dbTestStatus');
+          btn.classList.add('testing');
+          btn.textContent = '⏳ Testing...';
+          status.textContent = '';
+          try {
+            const cfg = _collectDBConfig();
+            const res = await fetch(`${state.apiBase}/db/test`, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({config: cfg}),
+            });
+            const data = await res.json();
+            if (data.ok) {
+              status.innerHTML = '<span class="infra-status-ok">✓ Connected</span>';
+              showToast('DB backend connected', 'success');
+            } else {
+              status.innerHTML = `<span class="infra-status-err">✗ ${data.error||'Failed'}</span>`;
+              showToast('Connection failed: ' + (data.error||'unknown'), 'error');
+            }
+          } catch(e) {
+            status.innerHTML = `<span class="infra-status-err">✗ ${e.message}</span>`;
+          } finally {
+            btn.classList.remove('testing');
+            btn.textContent = '🔌 Test Connection';
+          }
+        }
+
+        async function loadSecretKeys() {
+          const el = document.getElementById('secretKeysList');
+          if (!el) return;
+          try {
+            const res = await fetch(`${state.apiBase}/secrets/list`);
+            if (!res.ok) { el.innerHTML = '<div style="color:#4b5563;font-size:13px;">No secrets found</div>'; return; }
+            const data = await res.json();
+            const keys = data.keys || [];
+            if (!keys.length) {
+              el.innerHTML = '<div style="color:#4b5563;font-size:13px;">No secrets stored yet. Add one above.</div>';
+              return;
+            }
+            el.innerHTML = keys.map(k => `
+              <div class="secret-row">
+                <div class="secret-key">${k}</div>
+                <div class="secret-ref">sk://${k}</div>
+                <button class="secret-del-btn" onclick="deleteSecret('${k}')">✕</button>
+              </div>`).join('');
+          } catch(e) {
+            el.innerHTML = `<div style="color:#ef4444;font-size:12px;">Error: ${e.message}</div>`;
+          }
+        }
+
+        function showAddSecretModal() {
+          document.getElementById('newSecretKey').value = '';
+          document.getElementById('newSecretValue').value = '';
+          document.getElementById('newSecretRefPreview').textContent = 'sk://';
+          document.getElementById('addSecretModal').classList.add('active');
+        }
+
+        function updateSecretRef() {
+          const key = document.getElementById('newSecretKey').value.trim().replace(/\s+/g,'_');
+          document.getElementById('newSecretRefPreview').textContent = `sk://${key||''}`;
+        }
+
+        async function addSecret() {
+          const key = document.getElementById('newSecretKey').value.trim();
+          const value = document.getElementById('newSecretValue').value;
+          if (!key) { showToast('Key name is required', 'error'); return; }
+          if (!value) { showToast('Value is required', 'error'); return; }
+          try {
+            const res = await fetch(`${state.apiBase}/secrets/set`, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({key, value}),
+            });
+            if (res.ok) {
+              closeModal('addSecretModal');
+              showToast(`Secret '${key}' saved — reference as sk://${key}`, 'success');
+              await loadSecretKeys();
+            } else {
+              const err = await res.json().catch(()=>({detail:'Unknown error'}));
+              showToast('Failed: ' + (err.detail||'unknown'), 'error');
+            }
+          } catch(e) { showToast('Error: ' + e.message, 'error'); }
+        }
+
+        async function deleteSecret(key) {
+          if (!confirm(`Delete secret '${key}'?`)) return;
+          try {
+            const res = await fetch(`${state.apiBase}/secrets/${encodeURIComponent(key)}`, {method:'DELETE'});
+            if (res.ok) {
+              showToast(`Secret '${key}' deleted`, 'success');
+              await loadSecretKeys();
+            } else {
+              showToast('Delete failed', 'error');
+            }
+          } catch(e) { showToast('Error: ' + e.message, 'error'); }
+        }
+
+        async function doDBSync(direction) {
+          const statusEl = document.getElementById('dbSyncStatus');
+          statusEl.textContent = `⏳ ${direction === 'download' ? 'Pulling from S3...' : 'Pushing to S3...'}`;
+          try {
+            const res = await fetch(`${state.apiBase}/db/sync`, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({direction}),
+            });
+            const data = await res.json();
+            if (data.ok) {
+              statusEl.textContent = `✓ ${data.action || direction} — ${data.bytes ? Math.round(data.bytes/1024)+'KB' : 'done'}`;
+              showToast('S3 sync successful', 'success');
+            } else {
+              statusEl.textContent = `✗ ${data.error || 'Failed'}`;
+              showToast('Sync failed: ' + (data.error||'unknown'), 'error');
+            }
+          } catch(e) {
+            statusEl.textContent = `✗ ${e.message}`;
+            showToast('Sync error: ' + e.message, 'error');
+          }
+        }
+
+        async function loadDBStatus() {
+          const el = document.getElementById('dbStatusPanel');
+          if (!el) return;
+          try {
+            const res = await fetch(`${state.apiBase}/db/status`);
+            if (!res.ok) { el.textContent = 'Status unavailable'; return; }
+            const data = await res.json();
+            const rows = [];
+            if (data.backend) rows.push(`<span style="color:#9ca3af;">Backend:</span> <strong>${data.backend}</strong>`);
+            if (data.path) rows.push(`<span style="color:#9ca3af;">Path:</span> <code style="font-size:11px;">${data.path}</code>`);
+            if (data.size_bytes !== undefined) rows.push(`<span style="color:#9ca3af;">Size:</span> ${Math.round(data.size_bytes/1024)} KB`);
+            if (data.db) rows.push(`<span style="color:#9ca3af;">Database:</span> ${data.db}`);
+            if (data.url) rows.push(`<span style="color:#9ca3af;">URL:</span> <code style="font-size:11px;">${data.url}</code>`);
+            el.innerHTML = rows.map(r=>`<div style="margin-bottom:5px;">${r}</div>`).join('') ||
+              '<span style="color:#4b5563;">No status available</span>';
+          } catch(e) {
+            el.textContent = 'Error loading status';
+          }
+        }
+
+        // ── Quick Project API Keys ───────────────────────────────────
+
+        const QUICK_API_KEYS = [
+          {key:'anthropic_api_key',    label:'Anthropic API Key',        placeholder:'sk-ant-…',       help:'Used by SOCPilot (AI chatbot)'},
+          {key:'aws_access_key_id',    label:'AWS Access Key ID',         placeholder:'AKIA…',          help:'AWS CLI / Prowler / ScoutSuite'},
+          {key:'aws_secret_access_key',label:'AWS Secret Access Key',     placeholder:'…',              help:'AWS CLI secret'},
+          {key:'aws_session_token',    label:'AWS Session Token',         placeholder:'(optional)',     help:'Temporary credential token'},
+          {key:'azure_client_id',      label:'Azure Client ID',           placeholder:'…-…-…-…-…',     help:'Azure service principal'},
+          {key:'azure_client_secret',  label:'Azure Client Secret',       placeholder:'…',              help:'Azure service principal secret'},
+          {key:'azure_tenant_id',      label:'Azure Tenant ID',           placeholder:'…-…-…-…-…',     help:'Azure AD tenant'},
+          {key:'gcp_service_account',  label:'GCP Service Account JSON',  placeholder:'Paste JSON…',    help:'GCP Prowler / ScoutSuite auth'},
+          {key:'vault_token',          label:'Vault Token',               placeholder:'hvs.…',          help:'HashiCorp Vault access token'},
+          {key:'motherduck_token',     label:'MotherDuck Token',          placeholder:'md_…',           help:'MotherDuck cloud DuckDB'},
+          {key:'nuclei_api_key',       label:'Nuclei Cloud API Key',      placeholder:'…',              help:'Nuclei Cloud integration'},
+          {key:'slack_webhook_url',    label:'Slack Webhook URL',         placeholder:'https://hooks.slack.com/…', help:'Alert notifications'},
+        ];
+
+        async function renderQuickApiKeys() {
+          const container = document.getElementById('quickApiKeysList');
+          if (!container) return;
+
+          // Fetch existing keys to mark stored ones
+          let storedKeys = [];
+          try {
+            const res = await fetch(`${state.apiBase}/secrets/list`);
+            if (res.ok) { const d = await res.json(); storedKeys = (d.keys || []).map(k => k.key || k); }
+          } catch(e) {}
+
+          container.innerHTML = QUICK_API_KEYS.map(item => {
+            const isStored = storedKeys.includes(item.key);
+            return `<div class="quickkey-row" id="qkrow-${item.key}">
+              <span class="quickkey-label" title="${item.help}">${item.label}</span>
+              ${isStored
+                ? `<div class="sk-ref-badge" style="flex:1;">🔐 <span>sk://${item.key}</span>
+                     <button class="sk-ref-change" onclick="clearQuickKey('${item.key}')">✕ Change</button>
+                   </div>`
+                : `<input type="password" class="form-input" id="qkval-${item.key}" placeholder="${item.placeholder}" style="flex:1;font-size:12px;">`}
+              ${isStored ? '' : `<button class="quickkey-store-btn" onclick="storeQuickKey('${item.key}','${item.label.replace(/'/g,"\\'")}')">🔐 Store</button>`}
+              <span style="font-size:11px;color:#4b5563;width:140px;text-align:right;flex-shrink:0;">${item.help}</span>
+            </div>`;
+          }).join('');
+        }
+
+        async function storeQuickKey(key, label) {
+          const input = document.getElementById(`qkval-${key}`);
+          if (!input) return;
+          const value = input.value.trim();
+          if (!value) { showToast(`Enter a value for ${label} first`, 'warning'); return; }
+          try {
+            const res = await fetch(`${state.apiBase}/secrets/set`, {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({key, value}),
+            });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Failed');
+            const row = document.getElementById(`qkrow-${key}`);
+            if (row) {
+              const info = QUICK_API_KEYS.find(k => k.key === key);
+              row.innerHTML = `
+                <span class="quickkey-label">${label}</span>
+                <div class="sk-ref-badge" style="flex:1;">🔐 <span>sk://${key}</span>
+                  <button class="sk-ref-change" onclick="clearQuickKey('${key}')">✕ Change</button>
+                </div>
+                <span style="font-size:11px;color:#4b5563;width:140px;text-align:right;flex-shrink:0;">${info ? info.help : ''}</span>`;
+            }
+            showToast(`Stored as sk://${key}`, 'success');
+          } catch(e) { showToast('Store failed: ' + e.message, 'error'); }
+        }
+
+        async function clearQuickKey(key) {
+          const row = document.getElementById(`qkrow-${key}`);
+          if (!row) return;
+          const info = QUICK_API_KEYS.find(k => k.key === key);
+          if (!info) return;
+          row.innerHTML = `
+            <span class="quickkey-label" title="${info.help}">${info.label}</span>
+            <input type="password" class="form-input" id="qkval-${key}" placeholder="${info.placeholder}" style="flex:1;font-size:12px;">
+            <button class="quickkey-store-btn" onclick="storeQuickKey('${key}','${info.label.replace(/'/g,"\\'") }')">🔐 Store</button>
+            <span style="font-size:11px;color:#4b5563;width:140px;text-align:right;flex-shrink:0;">${info.help}</span>`;
+        }
+
         function loadDashboardData() {
             document.getElementById('dashTotalScans').textContent = state.dashboardStats.totalScans;
             document.getElementById('dashCritical').textContent = state.dashboardStats.criticalVulns;
@@ -3601,28 +5330,170 @@ Vulnerabilities found. See detailed report above.`
             loadRecentScans();
         }
 
-        function loadRecentScans() {
-            const scans = [
-                { id: 'scan-2024-001', type: 'Full Scan', target: '/app/src', status: 'completed', critical: 2, high: 5, medium: 12, started: '2024-02-24 14:30' },
-                { id: 'scan-2024-002', type: 'Container', target: 'nginx:1.25', status: 'completed', critical: 1, high: 3, medium: 8, started: '2024-02-24 13:15' },
-                { id: 'scan-2024-003', type: 'IaC', target: './terraform', status: 'completed', critical: 0, high: 2, medium: 4, started: '2024-02-24 12:00' },
-                { id: 'scan-2024-004', type: 'SBOM', target: './package.json', status: 'completed', critical: 3, high: 8, medium: 15, started: '2024-02-23 16:45' },
-                { id: 'scan-2024-005', type: 'URL', target: 'https://api.example.com', status: 'completed', critical: 0, high: 1, medium: 2, started: '2024-02-23 10:20' }
-            ];
+        // Cache of scan data keyed by id for detail modal
+        const _scanCache = {};
 
+        async function loadRecentScans() {
             const tbody = document.getElementById('recentScansBody');
-            tbody.innerHTML = scans.map(scan => `
-                <tr>
-                    <td><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #10b981;">${scan.id}</code></td>
-                    <td>${scan.type}</td>
-                    <td>${scan.target}</td>
-                    <td><span class="status-badge status-success">✓ ${scan.status}</span></td>
-                    <td><span style="color: #dc2626; font-weight: 600;">${scan.critical}</span></td>
-                    <td><span style="color: #ea580c; font-weight: 600;">${scan.high}</span></td>
-                    <td><span style="color: #eab308; font-weight: 600;">${scan.medium}</span></td>
-                    <td>${scan.started}</td>
-                </tr>
-            `).join('');
+            if (!tbody) return;
+            try {
+                const res = await fetch(`${state.apiBase}/history/scans?limit=10`);
+                const data = res.ok ? await res.json() : null;
+                const scans = data?.scans || [];
+
+                if (!scans.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6b7280;">No scans yet. Click <strong>New Scan</strong> to get started.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = scans.map(scan => {
+                    _scanCache[scan.id] = scan;
+                    const summary = scan.summary || {};
+                    const critical = summary.critical ?? summary.CRITICAL ?? 0;
+                    const high = summary.high ?? summary.HIGH ?? 0;
+                    const medium = summary.medium ?? summary.MEDIUM ?? 0;
+                    const started = scan.started_at ? new Date(scan.started_at).toLocaleString() : '—';
+                    const statusClass = scan.status === 'completed' ? 'status-success' : scan.status === 'failed' ? 'status-error' : 'status-warning';
+                    const statusIcon = scan.status === 'completed' ? '✓' : scan.status === 'failed' ? '✗' : '⏳';
+                    return `<tr class="scan-row" onclick="openScanDetail(${scan.id})" title="Click to view report">
+                        <td><span style="text-transform:capitalize;">${scan.scan_type}</span></td>
+                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${scan.target}">${scan.target}</td>
+                        <td><span class="status-badge ${statusClass}">${statusIcon} ${scan.status}</span></td>
+                        <td><span style="color:#dc2626;font-weight:600;">${critical}</span></td>
+                        <td><span style="color:#ea580c;font-weight:600;">${high}</span></td>
+                        <td><span style="color:#eab308;font-weight:600;">${medium}</span></td>
+                        <td style="font-size:12px;color:#6b7280;">${started}</td>
+                        <td><button class="btn btn-secondary btn-small" onclick="event.stopPropagation();openScanDetail(${scan.id})">📄 Report</button></td>
+                    </tr>`;
+                }).join('');
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;">Error loading scans: ${e.message}</td></tr>`;
+            }
+        }
+
+        async function openScanDetail(scanId) {
+            const modal = document.getElementById('scanDetailModal');
+            const title = document.getElementById('scanDetailTitle');
+            const body = document.getElementById('scanDetailBody');
+            if (!modal) return;
+
+            body.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">Loading report...</div>';
+            title.textContent = 'Scan Report';
+            modal.classList.add('active');
+
+            let scan = _scanCache[scanId];
+            if (!scan) {
+                try {
+                    const res = await fetch(`${state.apiBase}/history/scans?limit=100`);
+                    if (res.ok) {
+                        const d = await res.json();
+                        (d.scans || []).forEach(s => { _scanCache[s.id] = s; });
+                        scan = _scanCache[scanId];
+                    }
+                } catch(e) {}
+            }
+
+            if (!scan) {
+                body.innerHTML = '<div style="color:#ef4444;">Scan not found.</div>';
+                return;
+            }
+
+            const summary = scan.summary || {};
+            const critical = summary.critical ?? summary.CRITICAL ?? 0;
+            const high = summary.high ?? summary.HIGH ?? 0;
+            const medium = summary.medium ?? summary.MEDIUM ?? 0;
+            const low = summary.low ?? summary.LOW ?? 0;
+            const started = scan.started_at ? new Date(scan.started_at).toLocaleString() : '—';
+            const completed = scan.completed_at ? new Date(scan.completed_at).toLocaleString() : '—';
+            const tool = scan.tool || '—';
+            const statusClass = scan.status === 'completed' ? 'status-success' : scan.status === 'failed' ? 'status-error' : 'status-warning';
+
+            title.textContent = `${scan.scan_type.toUpperCase()} — ${scan.target}`;
+
+            // Build vuln table if raw_output has parseable data
+            let vulnRows = '';
+            try {
+                const raw = typeof scan.raw_output === 'string' ? JSON.parse(scan.raw_output) : scan.raw_output;
+                const vulns = raw?.vulnerabilities || raw?.findings || raw?.results || [];
+                if (vulns.length) {
+                    vulnRows = `
+                    <div style="margin-top:20px;">
+                        <div style="font-size:13px;font-weight:600;color:#f3f4f6;margin-bottom:10px;">Findings (${vulns.length})</div>
+                        <div class="table-wrapper" style="max-height:280px;overflow-y:auto;">
+                            <table>
+                                <thead><tr><th>ID</th><th>Severity</th><th>Package</th><th>Description</th></tr></thead>
+                                <tbody>
+                                    ${vulns.slice(0,50).map(v => {
+                                        const sev = (v.severity||'unknown').toLowerCase();
+                                        const sevColor = sev==='critical'?'#dc2626':sev==='high'?'#ea580c':sev==='medium'?'#eab308':'#6b7280';
+                                        return `<tr>
+                                            <td><code style="font-size:11px;color:#10b981;">${v.id||v.vuln_id||'—'}</code></td>
+                                            <td><span style="color:${sevColor};font-weight:600;text-transform:capitalize;">${v.severity||'—'}</span></td>
+                                            <td style="font-size:12px;">${v.package||v.name||'—'}</td>
+                                            <td style="font-size:12px;color:#9ca3af;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(v.description||'').replace(/"/g,'&quot;')}">${v.description||'—'}</td>
+                                        </tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                }
+            } catch(e) {}
+
+            body.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:11px;color:#6b7280;margin-bottom:3px;">Target</div>
+                        <code style="font-size:13px;color:#e6edf3;">${scan.target}</code>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#6b7280;margin-bottom:3px;">Tool</div>
+                        <span style="font-size:13px;color:#e6edf3;">${tool}</span>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#6b7280;margin-bottom:3px;">Status</div>
+                        <span class="status-badge ${statusClass}">${scan.status}</span>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#6b7280;margin-bottom:3px;">Started</div>
+                        <span style="font-size:12px;color:#9ca3af;">${started}</span>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+                    <div style="background:#0d1117;border:1px solid #1f2937;border-radius:6px;padding:12px;text-align:center;">
+                        <div style="font-size:22px;font-weight:700;color:#dc2626;">${critical}</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:4px;">Critical</div>
+                    </div>
+                    <div style="background:#0d1117;border:1px solid #1f2937;border-radius:6px;padding:12px;text-align:center;">
+                        <div style="font-size:22px;font-weight:700;color:#ea580c;">${high}</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:4px;">High</div>
+                    </div>
+                    <div style="background:#0d1117;border:1px solid #1f2937;border-radius:6px;padding:12px;text-align:center;">
+                        <div style="font-size:22px;font-weight:700;color:#eab308;">${medium}</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:4px;">Medium</div>
+                    </div>
+                    <div style="background:#0d1117;border:1px solid #1f2937;border-radius:6px;padding:12px;text-align:center;">
+                        <div style="font-size:22px;font-weight:700;color:#6b7280;">${low}</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:4px;">Low</div>
+                    </div>
+                </div>
+                ${vulnRows}
+                ${scan.raw_output ? `
+                <details style="margin-top:16px;">
+                    <summary style="cursor:pointer;font-size:12px;color:#6b7280;padding:6px 0;">Raw Output</summary>
+                    <pre style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;font-size:11px;color:#e6edf3;overflow:auto;max-height:200px;margin-top:8px;white-space:pre-wrap;">${(typeof scan.raw_output === 'string' ? scan.raw_output : JSON.stringify(scan.raw_output, null, 2)).slice(0, 4000)}</pre>
+                </details>` : ''}
+                <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+                    <button class="btn btn-primary" onclick="closeModal('scanDetailModal');switchTab('scanner')">Run New Scan →</button>
+                </div>`;
+        }
+
+        function dashGoToScanner(severity) {
+            switchTab('scanner');
+            // Pre-select the severity filter after a brief delay for tab render
+            setTimeout(() => {
+                showToast(`Showing ${severity} severity findings — run a scan to update`, 'info');
+            }, 300);
         }
 
         function refreshDashboard() {

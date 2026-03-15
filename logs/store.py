@@ -15,17 +15,27 @@ from ..models import LogStats, NormalizedLog, Severity
 
 
 class LogStore:
-    """DuckDB-backed log storage with SQL query support."""
+    """DuckDB-backed log storage with SQL query support.
+
+    connection_string examples:
+      "data/shieldkit.duckdb"                     — local file (default)
+      "md:shieldkit?motherduck_token=TOKEN"        — MotherDuck cloud
+      ":memory:"                                   — ephemeral (tests / postgres attach)
+    """
 
     def __init__(self, db_path: str = "data/shieldkit.duckdb"):
+        # Accept either a plain path or a full connection string
         self.db_path = db_path
         self._conn = None
+        self._is_motherduck = db_path.startswith("md:")
+        self._is_memory = db_path == ":memory:"
 
     @property
     def conn(self):
         if self._conn is None:
             import duckdb
-            Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+            if not self._is_motherduck and not self._is_memory:
+                Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
             self._conn = duckdb.connect(self.db_path)
             self._init_schema()
         return self._conn

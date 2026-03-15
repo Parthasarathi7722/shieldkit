@@ -1,5 +1,21 @@
 version: "3.9"
 
+# ─────────────────────────────────────────────────────────────────
+#  ShieldKit — Docker Compose Quickstart
+#
+#  Zero-config demo (mock data, no real tools needed):
+#    docker compose up
+#
+#  Live scanning with external tools (ZAP + Trivy via Docker-in-Docker):
+#    docker compose --profile tools up
+#
+#  Persist data and set your Anthropic key for the AI chatbot:
+#    cp .env.example .env  # then edit .env
+#    docker compose up
+#
+#  Open:  http://localhost:8000
+# ─────────────────────────────────────────────────────────────────
+
 services:
   shieldkit:
     build: .
@@ -7,13 +23,16 @@ services:
     ports:
       - "${SERVER_PORT:-8000}:8000"
     env_file:
-      - .env
+      - path: .env
+        required: false          # start without .env — use SHIELDKIT_MODE=mock default
     environment:
-      - SHIELDKIT_MODE=${SHIELDKIT_MODE:-mock}
-      - DUCKDB_PATH=/app/data/shieldkit.duckdb
+      SHIELDKIT_MODE: "${SHIELDKIT_MODE:-mock}"
+      DUCKDB_PATH: /app/data/shieldkit.duckdb
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8000"
     volumes:
-      - shieldkit-data:/app/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # For container scanning
+      - shieldkit-data:/app/data  # persist DuckDB scan history
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # allow container scanning (live mode)
     networks:
       - shieldkit-net
     restart: unless-stopped
@@ -21,8 +40,26 @@ services:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
-      start_period: 15s
-      retries: 3
+      start_period: 20s
+      retries: 5
+
+  # ── DAST scanner — only started with --profile tools ──────────
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    profiles: [tools]
+    container_name: shieldkit-zap
+    command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
+    ports:
+      - "8090:8080"   # expose locally for debugging; ShieldKit talks via Docker network
+    networks:
+      - shieldkit-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/JSON/core/view/version/"]
+      interval: 30s
+      timeout: 15s
+      start_period: 60s
+      retries: 5
 
 volumes:
   shieldkit-data:
@@ -31,4 +68,3 @@ volumes:
 networks:
   shieldkit-net:
     driver: bridge
-    internal: false  # Needs outbound for cloud API calls and vuln DB updates
